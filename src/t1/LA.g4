@@ -1,6 +1,5 @@
 grammar LA;
 
-<<<<<<< Updated upstream
 @header{
     package t1;
 }
@@ -33,7 +32,7 @@ tipo_estendido : '^'? tipo_basico_ident;
 
 valor_constante : CADEIA | NUM_INT | NUM_REAL | 'verdadeiro' | 'falso';
 
-registo : 'registro' variavel?  'fim_registro';
+registro : 'registro' variavel*  'fim_registro';
 
 decl_global : 'procedimento' IDENT '(' parametros? ')' decl_local* cmd* 'fim_procedimento'
     | 'funcao' IDENT '(' parametros? ')' ':' tipo_estendido decl_local* cmd* 'fim_funcao';
@@ -91,6 +90,13 @@ op3 : '%';
 
 parcela : op_unario? parcela_unario | parcela_nao_unario;
 
+parcela_unario : '^' identificador
+    | IDENT '(' expressao (',' expressao)* ')'
+    | NUM_INT
+    | NUM_REAL
+    | '(' expressao ')'
+    ;
+
 parcela_nao_unario : '&' identificador | CADEIA;
 
 exp_relacional : exp_aritmetica (op_relacional exp_aritmetica)?;
@@ -110,14 +116,9 @@ op_logico1 : 'ou';
 op_logico2 : 'e';
 
 IDENT : ('a'..'z' | 'A'..'Z' | '_') ('a'..'z' | 'A'..'Z' | '0'..'9' | '_')*;
+
 NUM_INT : ('0'..'9')+;
+
 NUM_REAL : ('0'..'9')+ '.' ('0'..'9')+;
+
 CADEIA : '"' (~('"')|'\\"')* '"'; 
-   
-
-=======
-@header {
-    package t1;
-}
-
->>>>>>> Stashed changes
