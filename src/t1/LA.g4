@@ -1,5 +1,6 @@
 grammar LA;
 
+<<<<<<< Updated upstream
 @header{
     package t1;
 }
@@ -114,3 +115,9 @@ NUM_REAL : ('0'..'9')+ '.' ('0'..'9')+;
 CADEIA : '"' (~('"')|'\\"')* '"'; 
    
 
+=======
+@header {
+    package t1;
+}
+
+>>>>>>> Stashed changes
