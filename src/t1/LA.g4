@@ -6,7 +6,7 @@ grammar LA;
 
 // GRAMÁTICA LINGUAGEM LA
 
-programa : declaracoes 'algoritmo' corpo 'fim_algoritmo';
+programa : declaracoes 'algoritmo' corpo 'fim_algoritmo' ;
 
 declaracoes : decl_local_global*;
 
@@ -90,7 +90,7 @@ op3 : '%';
 
 parcela : op_unario? parcela_unario | parcela_nao_unario;
 
-parcela_unario : '^' identificador
+parcela_unario : '^'? identificador
     | IDENT '(' expressao (',' expressao)* ')'
     | NUM_INT
     | NUM_REAL
@@ -103,7 +103,7 @@ exp_relacional : exp_aritmetica (op_relacional exp_aritmetica)?;
 
 op_relacional : '=' | '<>' | '>=' | '<=' | '>'| '<';
 
-expressao : termo_logico (op_logico1 termo_logico)*;
+expressao : termo_logico (op_logico1 termo_logico)*; 
 
 termo_logico : fator_logico (op_logico2 fator_logico)*;
 
@@ -115,10 +115,17 @@ op_logico1 : 'ou';
 
 op_logico2 : 'e';
 
-IDENT : ('a'..'z' | 'A'..'Z' | '_') ('a'..'z' | 'A'..'Z' | '0'..'9' | '_')*;
+fragment
+DIGITO : '0'..'9';
 
-NUM_INT : ('0'..'9')+;
+IDENT : ('a'..'z' | 'A'..'Z' | '_') ('a'..'z' | 'A'..'Z' | '_' | DIGITO)*;
 
-NUM_REAL : ('0'..'9')+ '.' ('0'..'9')+;
+CADEIA : '"' ~('\n' | '\r' | '"')* '"';
 
-CADEIA : '"' (~('"')|'\\"')* '"'; 
+NUM_INT : DIGITO+;
+
+NUM_REAL : DIGITO+ '.' DIGITO+;
+
+COMENTARIO : '{' ~('}')* '}' -> skip;
+
+WS : (' ' | '\t' | '\r' | '\n') -> skip;
