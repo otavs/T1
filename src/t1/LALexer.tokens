@@ -63,6 +63,7 @@ NUM_INT=62
 NUM_REAL=63
 COMENTARIO=64
 WS=65
+CARACTERE_ERRADO=66
 'algoritmo'=1
 'fim_algoritmo'=2
 'declare'=3
