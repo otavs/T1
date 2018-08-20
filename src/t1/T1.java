@@ -25,7 +25,6 @@ public class T1 {
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(nomeArquivoEntrada));
         LALexer lexer = new LALexer(input);
         LAErrorListener errorListener = new LAErrorListener();
-        lexer.addErrorListener(errorListener);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         LAParser parser = new LAParser(tokens);
         parser.addErrorListener(errorListener);
