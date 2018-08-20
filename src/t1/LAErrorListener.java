@@ -36,10 +36,6 @@ public class LAErrorListener implements ANTLRErrorListener{
                     saida += "Linha " + i + ": erro sintatico proximo a " + texto + "\n";
                 }
             }
-            else{
-                String s = ((LALexer)rcgnzr).getText();
-                saida += "Linha " + i + ": " + s.charAt(0) + " - simbolo nao identificado\n";
-            }
         }
     }
 
