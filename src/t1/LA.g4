@@ -13,8 +13,8 @@ declaracoes : decl_local_global*;
 decl_local_global : decl_local | decl_global;
 
 decl_local : 'declare' variavel 
-    | 'constante' IDENT1=IDENT ':' tipo_basico '=' valor_constante
-    | 'tipo' IDENT2=IDENT ':' tipo;
+    | 'constante' ident1=IDENT ':' tipo_basico '=' valor_constante
+    | 'tipo' ident2=IDENT ':' tipo;
 
 variavel : id=identificador (',' outrosIds+=identificador)* ':' tipo;
 

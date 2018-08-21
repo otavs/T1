@@ -37,13 +37,13 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
         if(ctx.variavel() != null){
             
         }
-        else if(ctx.IDENT1 != null){
-            // verifica IDENT1 na tabela de simbolos
+        else if(ctx.ident1 != null){
+            // verifica ident1 na tabela de simbolos
             visitTipo_basico(ctx.tipo_basico());
             visitValor_constante(ctx.valor_constante());
         }
         else{
-            // verifica IDENT2
+            // verifica ident2
             visitTipo(ctx.tipo());
         }
         return null;

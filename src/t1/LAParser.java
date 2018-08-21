@@ -304,8 +304,8 @@ public class LAParser extends Parser {
 	}
 
 	public static class Decl_localContext extends ParserRuleContext {
-		public Token IDENT1;
-		public Token IDENT2;
+		public Token ident1;
+		public Token ident2;
 		public VariavelContext variavel() {
 			return getRuleContext(VariavelContext.class,0);
 		}
@@ -360,7 +360,7 @@ public class LAParser extends Parser {
 				setState(117);
 				match(T__3);
 				setState(118);
-				((Decl_localContext)_localctx).IDENT1 = match(IDENT);
+				((Decl_localContext)_localctx).ident1 = match(IDENT);
 				setState(119);
 				match(T__4);
 				setState(120);
@@ -377,7 +377,7 @@ public class LAParser extends Parser {
 				setState(124);
 				match(T__6);
 				setState(125);
-				((Decl_localContext)_localctx).IDENT2 = match(IDENT);
+				((Decl_localContext)_localctx).ident2 = match(IDENT);
 				setState(126);
 				match(T__4);
 				setState(127);
