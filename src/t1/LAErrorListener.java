@@ -10,29 +10,19 @@ import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 
 public class LAErrorListener implements ANTLRErrorListener{
-
-    String saida;
-    
-    public LAErrorListener() {
-        saida = "";
-    }
-    
-    String getSaida(){
-        return saida;
-    }
     
     @Override
     public void syntaxError(Recognizer<?, ?> rcgnzr, Object o, int i, int i1, String string, RecognitionException re) {
-        if(saida == "" && o instanceof Token){
+        if(Saida.getTexto() == "" && o instanceof Token){
             Token token = (Token)o;
             String texto = token.getText();
             if(token.getType() == LALexer.CARACTERE_ERRADO){
-                if(texto.equals("{")) saida += "Linha " + (i+1) + ": comentario nao fechado\n";
-                else saida += "Linha " + i + ": " + texto + " - simbolo nao identificado\n";
+                if(texto.equals("{")) Saida.println("Linha " + (i+1) + ": comentario nao fechado");
+                else Saida.println("Linha " + i + ": " + texto + " - simbolo nao identificado");
             }
             else{
                 if(texto.equals("<EOF>")) texto = "EOF";
-                saida += "Linha " + i + ": erro sintatico proximo a " + texto + "\n";
+                Saida.println("Linha " + i + ": erro sintatico proximo a " + texto);
             }
         }
     }

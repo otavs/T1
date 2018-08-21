@@ -128,6 +128,6 @@ NUM_REAL : DIGITO+ '.' DIGITO+;
 
 COMENTARIO : '{' ~('}')* '}' -> skip;
 
-WS : (' ' | '\t' | '\r' | '\n') -> skip;
+ESPACOS_EM_BRANCO : (' ' | '\t' | '\r' | '\n') -> skip;
 
 CARACTERE_ERRADO : . ;

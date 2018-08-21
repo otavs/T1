@@ -27,7 +27,8 @@ public class LALexer extends Lexer {
 		T__38=39, T__39=40, T__40=41, T__41=42, T__42=43, T__43=44, T__44=45, 
 		T__45=46, T__46=47, T__47=48, T__48=49, T__49=50, T__50=51, T__51=52, 
 		T__52=53, T__53=54, T__54=55, T__55=56, T__56=57, T__57=58, T__58=59, 
-		IDENT=60, CADEIA=61, NUM_INT=62, NUM_REAL=63, COMENTARIO=64, WS=65, CARACTERE_ERRADO=66;
+		IDENT=60, CADEIA=61, NUM_INT=62, NUM_REAL=63, COMENTARIO=64, ESPACOS_EM_BRANCO=65, 
+		CARACTERE_ERRADO=66;
 	public static String[] channelNames = {
 		"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
 	};
@@ -45,7 +46,7 @@ public class LALexer extends Lexer {
 		"T__41", "T__42", "T__43", "T__44", "T__45", "T__46", "T__47", "T__48", 
 		"T__49", "T__50", "T__51", "T__52", "T__53", "T__54", "T__55", "T__56", 
 		"T__57", "T__58", "DIGITO", "IDENT", "CADEIA", "NUM_INT", "NUM_REAL", 
-		"COMENTARIO", "WS", "CARACTERE_ERRADO"
+		"COMENTARIO", "ESPACOS_EM_BRANCO", "CARACTERE_ERRADO"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
@@ -65,7 +66,8 @@ public class LALexer extends Lexer {
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, null, null, null, null, null, null, null, null, 
-		"IDENT", "CADEIA", "NUM_INT", "NUM_REAL", "COMENTARIO", "WS", "CARACTERE_ERRADO"
+		"IDENT", "CADEIA", "NUM_INT", "NUM_REAL", "COMENTARIO", "ESPACOS_EM_BRANCO", 
+		"CARACTERE_ERRADO"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
