@@ -304,16 +304,18 @@ public class LAParser extends Parser {
 	}
 
 	public static class Decl_localContext extends ParserRuleContext {
+		public Token IDENT1;
+		public Token IDENT2;
 		public VariavelContext variavel() {
 			return getRuleContext(VariavelContext.class,0);
 		}
-		public TerminalNode IDENT() { return getToken(LAParser.IDENT, 0); }
 		public Tipo_basicoContext tipo_basico() {
 			return getRuleContext(Tipo_basicoContext.class,0);
 		}
 		public Valor_constanteContext valor_constante() {
 			return getRuleContext(Valor_constanteContext.class,0);
 		}
+		public TerminalNode IDENT() { return getToken(LAParser.IDENT, 0); }
 		public TipoContext tipo() {
 			return getRuleContext(TipoContext.class,0);
 		}
@@ -358,7 +360,7 @@ public class LAParser extends Parser {
 				setState(117);
 				match(T__3);
 				setState(118);
-				match(IDENT);
+				((Decl_localContext)_localctx).IDENT1 = match(IDENT);
 				setState(119);
 				match(T__4);
 				setState(120);
@@ -375,7 +377,7 @@ public class LAParser extends Parser {
 				setState(124);
 				match(T__6);
 				setState(125);
-				match(IDENT);
+				((Decl_localContext)_localctx).IDENT2 = match(IDENT);
 				setState(126);
 				match(T__4);
 				setState(127);
@@ -398,14 +400,17 @@ public class LAParser extends Parser {
 	}
 
 	public static class VariavelContext extends ParserRuleContext {
+		public IdentificadorContext id;
+		public IdentificadorContext identificador;
+		public List<IdentificadorContext> outrosIds = new ArrayList<IdentificadorContext>();
+		public TipoContext tipo() {
+			return getRuleContext(TipoContext.class,0);
+		}
 		public List<IdentificadorContext> identificador() {
 			return getRuleContexts(IdentificadorContext.class);
 		}
 		public IdentificadorContext identificador(int i) {
 			return getRuleContext(IdentificadorContext.class,i);
-		}
-		public TipoContext tipo() {
-			return getRuleContext(TipoContext.class,0);
 		}
 		public VariavelContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -434,7 +439,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(130);
-			identificador();
+			((VariavelContext)_localctx).id = identificador();
 			setState(135);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -444,7 +449,8 @@ public class LAParser extends Parser {
 				setState(131);
 				match(T__7);
 				setState(132);
-				identificador();
+				((VariavelContext)_localctx).identificador = identificador();
+				((VariavelContext)_localctx).outrosIds.add(((VariavelContext)_localctx).identificador);
 				}
 				}
 				setState(137);
@@ -469,12 +475,15 @@ public class LAParser extends Parser {
 	}
 
 	public static class IdentificadorContext extends ParserRuleContext {
+		public Token ident;
+		public Token IDENT;
+		public List<Token> outrosIdents = new ArrayList<Token>();
+		public DimensaoContext dimensao() {
+			return getRuleContext(DimensaoContext.class,0);
+		}
 		public List<TerminalNode> IDENT() { return getTokens(LAParser.IDENT); }
 		public TerminalNode IDENT(int i) {
 			return getToken(LAParser.IDENT, i);
-		}
-		public DimensaoContext dimensao() {
-			return getRuleContext(DimensaoContext.class,0);
 		}
 		public IdentificadorContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -503,7 +512,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(141);
-			match(IDENT);
+			((IdentificadorContext)_localctx).ident = match(IDENT);
 			setState(146);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -513,7 +522,8 @@ public class LAParser extends Parser {
 				setState(142);
 				match(T__8);
 				setState(143);
-				match(IDENT);
+				((IdentificadorContext)_localctx).IDENT = match(IDENT);
+				((IdentificadorContext)_localctx).outrosIdents.add(((IdentificadorContext)_localctx).IDENT);
 				}
 				}
 				setState(148);

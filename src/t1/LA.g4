@@ -13,12 +13,12 @@ declaracoes : decl_local_global*;
 decl_local_global : decl_local | decl_global;
 
 decl_local : 'declare' variavel 
-    | 'constante' IDENT ':' tipo_basico '=' valor_constante
-    | 'tipo' IDENT ':' tipo;
+    | 'constante' IDENT1=IDENT ':' tipo_basico '=' valor_constante
+    | 'tipo' IDENT2=IDENT ':' tipo;
 
-variavel : identificador (',' identificador)* ':' tipo;
+variavel : id=identificador (',' outrosIds+=identificador)* ':' tipo;
 
-identificador : IDENT ('.' IDENT)* dimensao;
+identificador : ident=IDENT ('.' outrosIdents+=IDENT)* dimensao;
 
 dimensao : ('[' exp_aritmetica ']')*; 
 

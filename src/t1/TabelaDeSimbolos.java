@@ -15,12 +15,12 @@ public class TabelaDeSimbolos {
     public void adicionarSimbolo(String nome, String tipo) {
         simbolos.add(new EntradaTabelaDeSimbolos(nome,tipo));
     }
-    
+    /*
     public void adicionarSimbolos(List<String> nomes, String tipo) {
         for(String s : nomes) {
             simbolos.add(new EntradaTabelaDeSimbolos(s, tipo));
         }
-    }
+    }*/
     
     public boolean existeSimbolo(String nome) {
         for(EntradaTabelaDeSimbolos etds : simbolos) {
@@ -29,5 +29,9 @@ public class TabelaDeSimbolos {
             }
         }
         return false;
+    }
+    
+    public String getEscopo(){
+        return escopo;
     }
 }
