@@ -34,27 +34,27 @@ valor_constante : CADEIA | NUM_INT | NUM_REAL | 'verdadeiro' | 'falso';
 
 registro : 'registro' variavel*  'fim_registro';
 
-decl_global : 'procedimento' IDENT '(' parametros? ')' decl_local* cmd* 'fim_procedimento'
-    | 'funcao' IDENT '(' parametros? ')' ':' tipo_estendido decl_local* cmd* 'fim_funcao';
+decl_global : 'procedimento' ident1=IDENT '(' (params1=parametros)? ')' decl_local* cmd* 'fim_procedimento'
+    | 'funcao' ident2=IDENT '(' (params2=parametros)? ')' ':' tipo_estendido decl_local* cmd* 'fim_funcao';
 
-parametro : 'var'? identificador (',' identificador)* ':' tipo_estendido;
+parametro : 'var'? id1=identificador (',' id2+=identificador)* ':' tipo_estendido;
 
-parametros : parametro (',' parametro)*;
+parametros : param1=parametro (',' param2+=parametro)*;
 
 corpo : decl_local* cmd*;
 
 cmd : cmdLeia | cmdEscreva | cmdSe | cmdCaso | cmdPara | cmdEnquanto | cmdFaca 
     | cmdAtribuicao | cmdChamada | cmdRetorne;
 
-cmdLeia : 'leia' '(' '^'? identificador (',' '^'? identificador)* ')';
+cmdLeia : 'leia' '(' '^'? id1=identificador (',' '^'? id2+=identificador)* ')';
 
-cmdEscreva : 'escreva' '(' expressao (',' expressao)* ')';
+cmdEscreva : 'escreva' '(' exp1=expressao (',' exp2+=expressao)* ')';
 
-cmdSe : 'se' expressao 'entao' cmd* ('senao' cmd*)? 'fim_se';
+cmdSe : 'se' e1=expressao 'entao' (c1+=cmd)* ('senao' c2+=cmd*)? 'fim_se';
 
 cmdCaso : 'caso' exp_aritmetica 'seja' selecao ('senao' cmd*)? 'fim_caso';
 
-cmdPara : 'para' IDENT '<-' exp_aritmetica 'ate' exp_aritmetica 'faca' cmd* 'fim_para';
+cmdPara : 'para' IDENT '<-' ea1=exp_aritmetica 'ate' ea2=exp_aritmetica 'faca' cmd* 'fim_para';
 
 cmdEnquanto : 'enquanto' expressao 'faca' cmd* 'fim_enquanto';
 
@@ -62,7 +62,7 @@ cmdFaca : 'faca' cmd* 'ate' expressao;
 
 cmdAtribuicao : '^'? identificador '<-' expressao;
 
-cmdChamada : IDENT '(' expressao (',' expressao)* ')';
+cmdChamada : IDENT '(' exp=expressao (',' outrasExp+=expressao)* ')';
 
 cmdRetorne : 'retorne' expressao;
 
@@ -70,17 +70,17 @@ selecao : item_selecao*;
 
 item_selecao : constantes ':' cmd*;
 
-constantes : numero_intervalo (',' numero_intervalo)*;
+constantes : ni1=numero_intervalo (',' ni2+=numero_intervalo)*;
 
-numero_intervalo : op_unario? NUM_INT ('..'  op_unario? NUM_INT)?;
+numero_intervalo : opu1=op_unario? ni1=NUM_INT ('..'  (opu2=op_unario)? ni2=NUM_INT)?;
 
 op_unario : '-';
 
-exp_aritmetica : termo (op1 termo)*;
+exp_aritmetica : t1=termo (op1 t2+=termo)*;
 
-termo : fator (op2 fator)*;
+termo : f1=fator (op2 f2+=fator)*;
 
-fator : parcela (op3 parcela)*; 
+fator : p1=parcela (op3 p2+=parcela)*; 
 
 op1 : '+' | '-';
 
@@ -91,21 +91,21 @@ op3 : '%';
 parcela : op_unario? parcela_unario | parcela_nao_unario;
 
 parcela_unario : '^'? identificador
-    | IDENT '(' expressao (',' expressao)* ')'
+    | IDENT '(' e1=expressao (',' e2+=expressao)* ')'
     | NUM_INT
     | NUM_REAL
-    | '(' expressao ')'
+    | '(' e3=expressao ')'
     ;
 
 parcela_nao_unario : '&' identificador | CADEIA;
 
-exp_relacional : exp_aritmetica (op_relacional exp_aritmetica)?;
+exp_relacional : e1=exp_aritmetica (op_relacional e2=exp_aritmetica)?;
 
 op_relacional : '=' | '<>' | '>=' | '<=' | '>'| '<';
 
-expressao : termo_logico (op_logico1 termo_logico)*; 
+expressao : t1=termo_logico (op_logico1 t2+=termo_logico)*; 
 
-termo_logico : fator_logico (op_logico2 fator_logico)*;
+termo_logico : f1=fator_logico (op_logico2 f2+=fator_logico)*;
 
 fator_logico : 'nao'? parcela_logica;
 

@@ -962,10 +962,11 @@ public class LAParser extends Parser {
 	}
 
 	public static class Decl_globalContext extends ParserRuleContext {
+		public Token ident1;
+		public ParametrosContext params1;
+		public Token ident2;
+		public ParametrosContext params2;
 		public TerminalNode IDENT() { return getToken(LAParser.IDENT, 0); }
-		public ParametrosContext parametros() {
-			return getRuleContext(ParametrosContext.class,0);
-		}
 		public List<Decl_localContext> decl_local() {
 			return getRuleContexts(Decl_localContext.class);
 		}
@@ -977,6 +978,9 @@ public class LAParser extends Parser {
 		}
 		public CmdContext cmd(int i) {
 			return getRuleContext(CmdContext.class,i);
+		}
+		public ParametrosContext parametros() {
+			return getRuleContext(ParametrosContext.class,0);
 		}
 		public Tipo_estendidoContext tipo_estendido() {
 			return getRuleContext(Tipo_estendidoContext.class,0);
@@ -1014,7 +1018,7 @@ public class LAParser extends Parser {
 				setState(186);
 				match(T__20);
 				setState(187);
-				match(IDENT);
+				((Decl_globalContext)_localctx).ident1 = match(IDENT);
 				setState(188);
 				match(T__21);
 				setState(190);
@@ -1023,7 +1027,7 @@ public class LAParser extends Parser {
 				if (_la==T__26 || _la==IDENT) {
 					{
 					setState(189);
-					parametros();
+					((Decl_globalContext)_localctx).params1 = parametros();
 					}
 				}
 
@@ -1067,7 +1071,7 @@ public class LAParser extends Parser {
 				setState(206);
 				match(T__24);
 				setState(207);
-				match(IDENT);
+				((Decl_globalContext)_localctx).ident2 = match(IDENT);
 				setState(208);
 				match(T__21);
 				setState(210);
@@ -1076,7 +1080,7 @@ public class LAParser extends Parser {
 				if (_la==T__26 || _la==IDENT) {
 					{
 					setState(209);
-					parametros();
+					((Decl_globalContext)_localctx).params2 = parametros();
 					}
 				}
 
@@ -1134,14 +1138,17 @@ public class LAParser extends Parser {
 	}
 
 	public static class ParametroContext extends ParserRuleContext {
+		public IdentificadorContext id1;
+		public IdentificadorContext identificador;
+		public List<IdentificadorContext> id2 = new ArrayList<IdentificadorContext>();
+		public Tipo_estendidoContext tipo_estendido() {
+			return getRuleContext(Tipo_estendidoContext.class,0);
+		}
 		public List<IdentificadorContext> identificador() {
 			return getRuleContexts(IdentificadorContext.class);
 		}
 		public IdentificadorContext identificador(int i) {
 			return getRuleContext(IdentificadorContext.class,i);
-		}
-		public Tipo_estendidoContext tipo_estendido() {
-			return getRuleContext(Tipo_estendidoContext.class,0);
 		}
 		public ParametroContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1180,7 +1187,7 @@ public class LAParser extends Parser {
 			}
 
 			setState(234);
-			identificador();
+			((ParametroContext)_localctx).id1 = identificador();
 			setState(239);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -1190,7 +1197,8 @@ public class LAParser extends Parser {
 				setState(235);
 				match(T__7);
 				setState(236);
-				identificador();
+				((ParametroContext)_localctx).identificador = identificador();
+				((ParametroContext)_localctx).id2.add(((ParametroContext)_localctx).identificador);
 				}
 				}
 				setState(241);
@@ -1215,6 +1223,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class ParametrosContext extends ParserRuleContext {
+		public ParametroContext param1;
+		public ParametroContext parametro;
+		public List<ParametroContext> param2 = new ArrayList<ParametroContext>();
 		public List<ParametroContext> parametro() {
 			return getRuleContexts(ParametroContext.class);
 		}
@@ -1248,7 +1259,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(245);
-			parametro();
+			((ParametrosContext)_localctx).param1 = parametro();
 			setState(250);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -1258,7 +1269,8 @@ public class LAParser extends Parser {
 				setState(246);
 				match(T__7);
 				setState(247);
-				parametro();
+				((ParametrosContext)_localctx).parametro = parametro();
+				((ParametrosContext)_localctx).param2.add(((ParametrosContext)_localctx).parametro);
 				}
 				}
 				setState(252);
@@ -1499,6 +1511,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class CmdLeiaContext extends ParserRuleContext {
+		public IdentificadorContext id1;
+		public IdentificadorContext identificador;
+		public List<IdentificadorContext> id2 = new ArrayList<IdentificadorContext>();
 		public List<IdentificadorContext> identificador() {
 			return getRuleContexts(IdentificadorContext.class);
 		}
@@ -1546,7 +1561,7 @@ public class LAParser extends Parser {
 			}
 
 			setState(282);
-			identificador();
+			((CmdLeiaContext)_localctx).id1 = identificador();
 			setState(290);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -1566,7 +1581,8 @@ public class LAParser extends Parser {
 				}
 
 				setState(287);
-				identificador();
+				((CmdLeiaContext)_localctx).identificador = identificador();
+				((CmdLeiaContext)_localctx).id2.add(((CmdLeiaContext)_localctx).identificador);
 				}
 				}
 				setState(292);
@@ -1589,6 +1605,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class CmdEscrevaContext extends ParserRuleContext {
+		public ExpressaoContext exp1;
+		public ExpressaoContext expressao;
+		public List<ExpressaoContext> exp2 = new ArrayList<ExpressaoContext>();
 		public List<ExpressaoContext> expressao() {
 			return getRuleContexts(ExpressaoContext.class);
 		}
@@ -1626,7 +1645,7 @@ public class LAParser extends Parser {
 			setState(296);
 			match(T__21);
 			setState(297);
-			expressao();
+			((CmdEscrevaContext)_localctx).exp1 = expressao();
 			setState(302);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -1636,7 +1655,8 @@ public class LAParser extends Parser {
 				setState(298);
 				match(T__7);
 				setState(299);
-				expressao();
+				((CmdEscrevaContext)_localctx).expressao = expressao();
+				((CmdEscrevaContext)_localctx).exp2.add(((CmdEscrevaContext)_localctx).expressao);
 				}
 				}
 				setState(304);
@@ -1659,6 +1679,10 @@ public class LAParser extends Parser {
 	}
 
 	public static class CmdSeContext extends ParserRuleContext {
+		public ExpressaoContext e1;
+		public CmdContext cmd;
+		public List<CmdContext> c1 = new ArrayList<CmdContext>();
+		public List<CmdContext> c2 = new ArrayList<CmdContext>();
 		public ExpressaoContext expressao() {
 			return getRuleContext(ExpressaoContext.class,0);
 		}
@@ -1697,7 +1721,7 @@ public class LAParser extends Parser {
 			setState(307);
 			match(T__29);
 			setState(308);
-			expressao();
+			((CmdSeContext)_localctx).e1 = expressao();
 			setState(309);
 			match(T__30);
 			setState(313);
@@ -1707,7 +1731,8 @@ public class LAParser extends Parser {
 				{
 				{
 				setState(310);
-				cmd();
+				((CmdSeContext)_localctx).cmd = cmd();
+				((CmdSeContext)_localctx).c1.add(((CmdSeContext)_localctx).cmd);
 				}
 				}
 				setState(315);
@@ -1728,7 +1753,8 @@ public class LAParser extends Parser {
 					{
 					{
 					setState(317);
-					cmd();
+					((CmdSeContext)_localctx).cmd = cmd();
+					((CmdSeContext)_localctx).c2.add(((CmdSeContext)_localctx).cmd);
 					}
 					}
 					setState(322);
@@ -1840,6 +1866,8 @@ public class LAParser extends Parser {
 	}
 
 	public static class CmdParaContext extends ParserRuleContext {
+		public Exp_aritmeticaContext ea1;
+		public Exp_aritmeticaContext ea2;
 		public TerminalNode IDENT() { return getToken(LAParser.IDENT, 0); }
 		public List<Exp_aritmeticaContext> exp_aritmetica() {
 			return getRuleContexts(Exp_aritmeticaContext.class);
@@ -1886,11 +1914,11 @@ public class LAParser extends Parser {
 			setState(344);
 			match(T__37);
 			setState(345);
-			exp_aritmetica();
+			((CmdParaContext)_localctx).ea1 = exp_aritmetica();
 			setState(346);
 			match(T__38);
 			setState(347);
-			exp_aritmetica();
+			((CmdParaContext)_localctx).ea2 = exp_aritmetica();
 			setState(348);
 			match(T__39);
 			setState(352);
@@ -2125,6 +2153,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class CmdChamadaContext extends ParserRuleContext {
+		public ExpressaoContext exp;
+		public ExpressaoContext expressao;
+		public List<ExpressaoContext> outrasExp = new ArrayList<ExpressaoContext>();
 		public TerminalNode IDENT() { return getToken(LAParser.IDENT, 0); }
 		public List<ExpressaoContext> expressao() {
 			return getRuleContexts(ExpressaoContext.class);
@@ -2163,7 +2194,7 @@ public class LAParser extends Parser {
 			setState(386);
 			match(T__21);
 			setState(387);
-			expressao();
+			((CmdChamadaContext)_localctx).exp = expressao();
 			setState(392);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -2173,7 +2204,8 @@ public class LAParser extends Parser {
 				setState(388);
 				match(T__7);
 				setState(389);
-				expressao();
+				((CmdChamadaContext)_localctx).expressao = expressao();
+				((CmdChamadaContext)_localctx).outrasExp.add(((CmdChamadaContext)_localctx).expressao);
 				}
 				}
 				setState(394);
@@ -2369,6 +2401,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class ConstantesContext extends ParserRuleContext {
+		public Numero_intervaloContext ni1;
+		public Numero_intervaloContext numero_intervalo;
+		public List<Numero_intervaloContext> ni2 = new ArrayList<Numero_intervaloContext>();
 		public List<Numero_intervaloContext> numero_intervalo() {
 			return getRuleContexts(Numero_intervaloContext.class);
 		}
@@ -2402,7 +2437,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(414);
-			numero_intervalo();
+			((ConstantesContext)_localctx).ni1 = numero_intervalo();
 			setState(419);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -2412,7 +2447,8 @@ public class LAParser extends Parser {
 				setState(415);
 				match(T__7);
 				setState(416);
-				numero_intervalo();
+				((ConstantesContext)_localctx).numero_intervalo = numero_intervalo();
+				((ConstantesContext)_localctx).ni2.add(((ConstantesContext)_localctx).numero_intervalo);
 				}
 				}
 				setState(421);
@@ -2433,6 +2469,10 @@ public class LAParser extends Parser {
 	}
 
 	public static class Numero_intervaloContext extends ParserRuleContext {
+		public Op_unarioContext opu1;
+		public Token ni1;
+		public Op_unarioContext opu2;
+		public Token ni2;
 		public List<TerminalNode> NUM_INT() { return getTokens(LAParser.NUM_INT); }
 		public TerminalNode NUM_INT(int i) {
 			return getToken(LAParser.NUM_INT, i);
@@ -2475,12 +2515,12 @@ public class LAParser extends Parser {
 			if (_la==T__45) {
 				{
 				setState(422);
-				op_unario();
+				((Numero_intervaloContext)_localctx).opu1 = op_unario();
 				}
 			}
 
 			setState(425);
-			match(NUM_INT);
+			((Numero_intervaloContext)_localctx).ni1 = match(NUM_INT);
 			setState(431);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -2494,12 +2534,12 @@ public class LAParser extends Parser {
 				if (_la==T__45) {
 					{
 					setState(427);
-					op_unario();
+					((Numero_intervaloContext)_localctx).opu2 = op_unario();
 					}
 				}
 
 				setState(430);
-				match(NUM_INT);
+				((Numero_intervaloContext)_localctx).ni2 = match(NUM_INT);
 				}
 			}
 
@@ -2558,6 +2598,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class Exp_aritmeticaContext extends ParserRuleContext {
+		public TermoContext t1;
+		public TermoContext termo;
+		public List<TermoContext> t2 = new ArrayList<TermoContext>();
 		public List<TermoContext> termo() {
 			return getRuleContexts(TermoContext.class);
 		}
@@ -2597,7 +2640,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(435);
-			termo();
+			((Exp_aritmeticaContext)_localctx).t1 = termo();
 			setState(441);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,43,_ctx);
@@ -2608,7 +2651,8 @@ public class LAParser extends Parser {
 					setState(436);
 					op1();
 					setState(437);
-					termo();
+					((Exp_aritmeticaContext)_localctx).termo = termo();
+					((Exp_aritmeticaContext)_localctx).t2.add(((Exp_aritmeticaContext)_localctx).termo);
 					}
 					} 
 				}
@@ -2630,6 +2674,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class TermoContext extends ParserRuleContext {
+		public FatorContext f1;
+		public FatorContext fator;
+		public List<FatorContext> f2 = new ArrayList<FatorContext>();
 		public List<FatorContext> fator() {
 			return getRuleContexts(FatorContext.class);
 		}
@@ -2669,7 +2716,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(444);
-			fator();
+			((TermoContext)_localctx).f1 = fator();
 			setState(450);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -2679,7 +2726,8 @@ public class LAParser extends Parser {
 				setState(445);
 				op2();
 				setState(446);
-				fator();
+				((TermoContext)_localctx).fator = fator();
+				((TermoContext)_localctx).f2.add(((TermoContext)_localctx).fator);
 				}
 				}
 				setState(452);
@@ -2700,6 +2748,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class FatorContext extends ParserRuleContext {
+		public ParcelaContext p1;
+		public ParcelaContext parcela;
+		public List<ParcelaContext> p2 = new ArrayList<ParcelaContext>();
 		public List<ParcelaContext> parcela() {
 			return getRuleContexts(ParcelaContext.class);
 		}
@@ -2739,7 +2790,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(453);
-			parcela();
+			((FatorContext)_localctx).p1 = parcela();
 			setState(459);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -2749,7 +2800,8 @@ public class LAParser extends Parser {
 				setState(454);
 				op3();
 				setState(455);
-				parcela();
+				((FatorContext)_localctx).parcela = parcela();
+				((FatorContext)_localctx).p2.add(((FatorContext)_localctx).parcela);
 				}
 				}
 				setState(461);
@@ -2993,6 +3045,10 @@ public class LAParser extends Parser {
 	}
 
 	public static class Parcela_unarioContext extends ParserRuleContext {
+		public ExpressaoContext e1;
+		public ExpressaoContext expressao;
+		public List<ExpressaoContext> e2 = new ArrayList<ExpressaoContext>();
+		public ExpressaoContext e3;
 		public IdentificadorContext identificador() {
 			return getRuleContext(IdentificadorContext.class,0);
 		}
@@ -3057,7 +3113,7 @@ public class LAParser extends Parser {
 				setState(480);
 				match(T__21);
 				setState(481);
-				expressao();
+				((Parcela_unarioContext)_localctx).e1 = expressao();
 				setState(486);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
@@ -3067,7 +3123,8 @@ public class LAParser extends Parser {
 					setState(482);
 					match(T__7);
 					setState(483);
-					expressao();
+					((Parcela_unarioContext)_localctx).expressao = expressao();
+					((Parcela_unarioContext)_localctx).e2.add(((Parcela_unarioContext)_localctx).expressao);
 					}
 					}
 					setState(488);
@@ -3098,7 +3155,7 @@ public class LAParser extends Parser {
 				setState(493);
 				match(T__21);
 				setState(494);
-				expressao();
+				((Parcela_unarioContext)_localctx).e3 = expressao();
 				setState(495);
 				match(T__22);
 				}
@@ -3179,6 +3236,8 @@ public class LAParser extends Parser {
 	}
 
 	public static class Exp_relacionalContext extends ParserRuleContext {
+		public Exp_aritmeticaContext e1;
+		public Exp_aritmeticaContext e2;
 		public List<Exp_aritmeticaContext> exp_aritmetica() {
 			return getRuleContexts(Exp_aritmeticaContext.class);
 		}
@@ -3215,7 +3274,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(504);
-			exp_aritmetica();
+			((Exp_relacionalContext)_localctx).e1 = exp_aritmetica();
 			setState(508);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -3224,7 +3283,7 @@ public class LAParser extends Parser {
 				setState(505);
 				op_relacional();
 				setState(506);
-				exp_aritmetica();
+				((Exp_relacionalContext)_localctx).e2 = exp_aritmetica();
 				}
 			}
 
@@ -3292,6 +3351,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class ExpressaoContext extends ParserRuleContext {
+		public Termo_logicoContext t1;
+		public Termo_logicoContext termo_logico;
+		public List<Termo_logicoContext> t2 = new ArrayList<Termo_logicoContext>();
 		public List<Termo_logicoContext> termo_logico() {
 			return getRuleContexts(Termo_logicoContext.class);
 		}
@@ -3331,7 +3393,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(512);
-			termo_logico();
+			((ExpressaoContext)_localctx).t1 = termo_logico();
 			setState(518);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -3341,7 +3403,8 @@ public class LAParser extends Parser {
 				setState(513);
 				op_logico1();
 				setState(514);
-				termo_logico();
+				((ExpressaoContext)_localctx).termo_logico = termo_logico();
+				((ExpressaoContext)_localctx).t2.add(((ExpressaoContext)_localctx).termo_logico);
 				}
 				}
 				setState(520);
@@ -3362,6 +3425,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class Termo_logicoContext extends ParserRuleContext {
+		public Fator_logicoContext f1;
+		public Fator_logicoContext fator_logico;
+		public List<Fator_logicoContext> f2 = new ArrayList<Fator_logicoContext>();
 		public List<Fator_logicoContext> fator_logico() {
 			return getRuleContexts(Fator_logicoContext.class);
 		}
@@ -3401,7 +3467,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(521);
-			fator_logico();
+			((Termo_logicoContext)_localctx).f1 = fator_logico();
 			setState(527);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -3411,7 +3477,8 @@ public class LAParser extends Parser {
 				setState(522);
 				op_logico2();
 				setState(523);
-				fator_logico();
+				((Termo_logicoContext)_localctx).fator_logico = fator_logico();
+				((Termo_logicoContext)_localctx).f2.add(((Termo_logicoContext)_localctx).fator_logico);
 				}
 				}
 				setState(529);
