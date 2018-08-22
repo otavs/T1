@@ -10,7 +10,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 public class T1 {
     
     public static void main(String[] args) throws Exception {
-        /*
+        
         // Verifica os argumentos recebidos
         if(args.length == 0){
             System.out.println("Compilador LA");
@@ -51,9 +51,10 @@ public class T1 {
         p.write(Saida.getTexto());
         p.close();
         arquivoSaida.close();
-        */
         
-        String nomeArquivoEntrada = "C:\\Users\\otavi\\Desktop\\Compilers_2\\T1\\T1\\casosDeTesteT1\\2.arquivos_com_erros_semanticos\\entrada\\1.algoritmo_2-2_apostila_LA.txt";
+        
+        /*
+        String nomeArquivoEntrada = "C:\\Users\\otavi\\Desktop\\Compilers_2\\T1\\T1\\casosDeTesteT1\\2.arquivos_com_erros_semanticos\\entrada\\3.algoritmo_3-1_apostila_LA.txt";
         
         // Converte o arquivo de entrada para um input do ANTLR
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(nomeArquivoEntrada));
@@ -76,5 +77,6 @@ public class T1 {
         
         Saida.println("Fim da compilacao");
         System.out.println(Saida.getTexto());
+        */
     }
 }

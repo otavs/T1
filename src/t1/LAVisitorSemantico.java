@@ -3,18 +3,24 @@ package t1;
 import org.antlr.v4.runtime.Token;
 
 public class LAVisitorSemantico extends LABaseVisitor<Void> {
-    // PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
+    PilhaDeTabelas pilhaDeTabelas;
     
     @Override
-    public Void visitPrograma(LAParser.ProgramaContext ctx) {
-        // pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));
+    public Void visitPrograma(LAParser.ProgramaContext ctx){
+        pilhaDeTabelas = new PilhaDeTabelas();
+        pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));
+        TabelaDeSimbolos topo = pilhaDeTabelas.topo();
+        topo.adicionarSimbolo("literal", "tipo", "");
+        topo.adicionarSimbolo("inteiro", "tipo", "");
+        topo.adicionarSimbolo("real", "tipo", "");
+        topo.adicionarSimbolo("logico", "tipo", "");
         visitDeclaracoes(ctx.declaracoes());
         visitCorpo(ctx.corpo());
         return null;
     }
     
     @Override
-    public Void visitDeclaracoes(LAParser.DeclaracoesContext ctx) {
+    public Void visitDeclaracoes(LAParser.DeclaracoesContext ctx){
         for(LAParser.Decl_local_globalContext decl : ctx.decl_local_global()){
             visitDecl_local_global(decl);
         }
@@ -22,7 +28,7 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     }
     
     @Override
-    public Void visitDecl_local_global(LAParser.Decl_local_globalContext ctx) {
+    public Void visitDecl_local_global(LAParser.Decl_local_globalContext ctx){
         if(ctx.decl_local() != null){
             visitDecl_local(ctx.decl_local());
         }
@@ -33,43 +39,74 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     }
     
     @Override
-    public Void visitDecl_local(LAParser.Decl_localContext ctx) {
+    public Void visitDecl_local(LAParser.Decl_localContext ctx){
         if(ctx.variavel() != null){
             visitVariavel(ctx.variavel());
         }
-        else if(ctx.ident1 != null){
-            // verifica ident1 na tabela de simbolos
-            visitTipo_basico(ctx.tipo_basico());
-            visitValor_constante(ctx.valor_constante());
+        else if(ctx.id1 != null){
+            // id1
+            // tipo_basico
+            // valor_constante
+            String id_txt = ctx.id1.getText();
+            pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "constante", ctx.tipo_basico().getText());
         }
         else{
-            // verifica ident2
+            // id2
+            // String tipo_txt = ctx.tipo().getText();
             visitTipo(ctx.tipo());
         }
         return null;
     }
     
     @Override
-    public Void visitVariavel(LAParser.VariavelContext ctx) {
-        visitIdentificador(ctx.id);
-        for(LAParser.IdentificadorContext id : ctx.outrosIds){
-            visitIdentificador(id);
+    public Void visitVariavel(LAParser.VariavelContext ctx){
+        if(ctx.parent instanceof LAParser.Decl_localContext){
+            visitIdentificador(ctx.id);
+            String id_txt = ctx.id.getText();
+            if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+                pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", ctx.tipo().getText());
+            }
+            else{
+                Saida.println("Linha " + ctx.id.start.getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
+            }
+            for(LAParser.IdentificadorContext id : ctx.outrosIds){
+                visitIdentificador(id);
+                id_txt = id.getText();
+                if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+                    pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", ctx.tipo().getText());
+                }
+                else{
+                    Saida.println("Linha " + id.start.getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
+                }
+            }
+            visitTipo(ctx.tipo());
+            String tipo_txt = ctx.tipo().getText();
+            if(!pilhaDeTabelas.existeSimbolo(tipo_txt)){
+                Saida.println("Linha " + ctx.tipo().start.getLine() + ": tipo " + tipo_txt + " nao declarado");
+            }
         }
-        visitTipo(ctx.tipo());
+        else if(ctx.parent instanceof LAParser.RegistroContext){
+            visitIdentificador(ctx.id);
+            for(LAParser.IdentificadorContext id : ctx.outrosIds){
+                visitIdentificador(id);
+            }
+            visitTipo(ctx.tipo());
+        }
         return null;
     }
     
     @Override
     public Void visitIdentificador(LAParser.IdentificadorContext ctx) {
-        // verifica ident
-        for(Token ident : ctx.outrosIdents){
-            // verifica ident
+        // verifica id
+        for(Token id : ctx.outrosIds){
+            // verifica id
         }
+        visitDimensao(ctx.dimensao());
         return null;
     }
     
     @Override
-    public Void visitDimensao(LAParser.DimensaoContext ctx) {
+    public Void visitDimensao(LAParser.DimensaoContext ctx){
         for(LAParser.Exp_aritmeticaContext exp : ctx.exp_aritmetica()){
             visitExp_aritmetica(exp);
         }
@@ -90,7 +127,7 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     @Override
     public Void visitTipo_basico_ident(LAParser.Tipo_basico_identContext ctx){
         if(ctx.tipo_basico() != null){
-            visitTipo_basico(ctx.tipo_basico());
+            // tipo_basico
         }
         else{
             //IDENT
@@ -99,13 +136,13 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     }
     
     @Override
-    public Void visitTipo_estendido (LAParser.Tipo_estendidoContext ctx){
+    public Void visitTipo_estendido(LAParser.Tipo_estendidoContext ctx){
         visitTipo_basico_ident(ctx.tipo_basico_ident());
         return null;
     }
     
     @Override
-    public Void visitRegistro (LAParser.RegistroContext ctx){
+    public Void visitRegistro(LAParser.RegistroContext ctx){
         for(LAParser.VariavelContext var : ctx.variavel()){
             visitVariavel(var);
         }
@@ -113,24 +150,28 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     }
     
     @Override
-    public Void visitDecl_global (LAParser.Decl_globalContext ctx){
+    public Void visitDecl_global(LAParser.Decl_globalContext ctx){
         if(ctx.ident1 != null){
             //ident1
-            if(ctx.params1 != null) visitParametros(ctx.parametros());
-            for(LAParser.Decl_localContext decl : ctx.decl_local()){
+            if(ctx.params1 != null){
+                visitParametros(ctx.params1);
+            }
+            for(LAParser.Decl_localContext decl : ctx.decl1){
                 visitDecl_local(decl);
             }
-            for(LAParser.CmdContext cmd : ctx.cmd()){
+            for(LAParser.CmdContext cmd : ctx.c1){
                 visitCmd(cmd);
             }
         }else {
             //ident2
-            if(ctx.params2 != null) visitParametros(ctx.parametros());
+            if(ctx.params2 != null){
+                visitParametros(ctx.params2);
+            }
             visitTipo_estendido(ctx.tipo_estendido());
-            for(LAParser.Decl_localContext decl : ctx.decl_local()){
+            for(LAParser.Decl_localContext decl : ctx.decl2){
                 visitDecl_local(decl);
             }
-            for(LAParser.CmdContext cmd : ctx.cmd()){
+            for(LAParser.CmdContext cmd : ctx.c2){
                 visitCmd(cmd);
             }
         }
@@ -138,7 +179,7 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     }
     
     @Override
-    public Void visitParametro (LAParser.ParametroContext ctx){
+    public Void visitParametro(LAParser.ParametroContext ctx){
         visitIdentificador(ctx.id1);
         for(LAParser.IdentificadorContext id : ctx.id2){
             visitIdentificador(id);
@@ -148,7 +189,7 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     }
     
     @Override
-    public Void visitParametros (LAParser.ParametrosContext ctx){
+    public Void visitParametros(LAParser.ParametrosContext ctx){
         visitParametro(ctx.param1);
         for(LAParser.ParametroContext param : ctx.param2){
             visitParametro(param);
@@ -157,10 +198,10 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     }
     
     @Override
-    public Void visitCorpo (LAParser.CorpoContext ctx){
+    public Void visitCorpo(LAParser.CorpoContext ctx){
         for(LAParser.Decl_localContext decl : ctx.decl_local()){
-                visitDecl_local(decl);
-            }
+            visitDecl_local(decl);
+        }
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
@@ -168,7 +209,7 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     }
     
     @Override
-    public Void visitCmd (LAParser.CmdContext ctx){
+    public Void visitCmd(LAParser.CmdContext ctx){
         if (ctx.cmdLeia() != null){
             visitCmdLeia(ctx.cmdLeia());
         }else if (ctx.cmdEscreva() != null){
@@ -194,8 +235,16 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     }
     @Override
     public Void visitCmdLeia(LAParser.CmdLeiaContext ctx){
+        String id_txt = ctx.id1.getText();
+        if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+            Saida.println("Linha " + ctx.id1.start.getLine() + ": identificador " + id_txt + " nao declarado");
+        }
         visitIdentificador(ctx.id1);
         for(LAParser.IdentificadorContext id : ctx.id2){
+            id_txt = id.getText();
+            if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+                Saida.println("Linha " + ctx.id1.start.getLine() + ": identificador " + id_txt + " nao declarado");
+            }
             visitIdentificador(id);
         }
         return null;
@@ -228,8 +277,10 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     public Void visitCmdCaso (LAParser.CmdCasoContext ctx){
         visitExp_aritmetica(ctx.exp_aritmetica());
         visitSelecao(ctx.selecao());
-        for(LAParser.CmdContext cmd : ctx.cmd()){
-            visitCmd(cmd);
+        if(ctx.cmd() != null){
+            for(LAParser.CmdContext cmd : ctx.cmd()){
+                visitCmd(cmd);
+            }   
         }
         return null;
     }
@@ -272,6 +323,7 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     
     @Override
     public Void visitCmdChamada(LAParser.CmdChamadaContext ctx){
+        // IDENT
         visitExpressao(ctx.exp);
         for(LAParser.ExpressaoContext exp : ctx.outrasExp){
             visitExpressao(exp);
@@ -287,8 +339,8 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     
     @Override
     public Void visitSelecao(LAParser.SelecaoContext ctx){
-        for(LAParser.Item_selecaoContext exp : ctx.item_selecao()){
-            visitItem_selecao(exp);
+        for(LAParser.Item_selecaoContext item : ctx.item_selecao()){
+            visitItem_selecao(item);
         }
         return null;
     }
@@ -313,7 +365,9 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
     
     @Override
     public Void visitNumero_intervalo(LAParser.Numero_intervaloContext ctx){
-        if(ctx.opu1 != null) visitOp_unario(ctx.opu1);
+        if(ctx.opu1 != null){
+            visitOp_unario(ctx.opu1);
+        }
         //ni1
         if(ctx.opu2 != null){
             visitOp_unario(ctx.opu2);
@@ -354,28 +408,50 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
 
     @Override
     public Void visitParcela (LAParser.ParcelaContext ctx){
-        if(ctx.op_unario() != null) visitOp_unario(ctx.op_unario());
-        if(ctx.parcela_unario() != null) visitParcela_unario(ctx.parcela_unario());
-        else visitParcela_nao_unario(ctx.parcela_nao_unario());
+        if(ctx.parcela_unario() != null){
+            if(ctx.op_unario() != null){
+                visitOp_unario(ctx.op_unario());
+            }
+            visitParcela_unario(ctx.parcela_unario());
+        }
+        else{
+            visitParcela_nao_unario(ctx.parcela_nao_unario());
+        }
         return null;
     }
     
     @Override
     public Void visitParcela_unario (LAParser.Parcela_unarioContext ctx){
-        if(ctx.identificador() != null) visitIdentificador(ctx.identificador());
+        if(ctx.identificador() != null) {
+            visitIdentificador(ctx.identificador());
+            String id_txt = ctx.identificador().getText();
+            if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+                Saida.println("Linha " + ctx.identificador().start.getLine() + ": identificador " + id_txt + " nao declarado");
+            }
+        }
         else if(ctx.e1 != null){ 
             visitExpressao(ctx.e1);
             for(LAParser.ExpressaoContext e : ctx.e2){
                 visitExpressao(e);
             }
-        }else if(ctx.e3 != null) visitExpressao(ctx.e3);
+        }else if(ctx.e3 != null){
+            visitExpressao(ctx.e3);
+        }
         return null;
     }
     
     @Override
     public Void visitParcela_nao_unario (LAParser.Parcela_nao_unarioContext ctx){
-        if(ctx.identificador() != null) visitIdentificador(ctx.identificador());
-        else {/* CADEIA */}
+        if(ctx.identificador() != null){
+            visitIdentificador(ctx.identificador());
+            String id_txt = ctx.identificador().getText();
+            if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+                Saida.println("Linha " + ctx.identificador().start.getLine() + ": identificador " + id_txt + " nao declarado");
+            }
+        }
+        else{
+            // CADEIA 
+        }
         return null;
     }
     
@@ -414,13 +490,12 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
         visitParcela_logica(ctx.parcela_logica());
         return null;
     }
-}
-
-
-/*
-@Override
-    public Void visitNOMEAQUI (LAParser.nomeContext ctx){
-        //código
+    
+    @Override
+    public Void visitParcela_logica(LAParser.Parcela_logicaContext ctx){
+        if(ctx.exp_relacional() != null){
+            visitExp_relacional(ctx.exp_relacional());
+        }
         return null;
     }
-*/
+}

@@ -304,8 +304,8 @@ public class LAParser extends Parser {
 	}
 
 	public static class Decl_localContext extends ParserRuleContext {
-		public Token ident1;
-		public Token ident2;
+		public Token id1;
+		public Token id2;
 		public VariavelContext variavel() {
 			return getRuleContext(VariavelContext.class,0);
 		}
@@ -360,7 +360,7 @@ public class LAParser extends Parser {
 				setState(117);
 				match(T__3);
 				setState(118);
-				((Decl_localContext)_localctx).ident1 = match(IDENT);
+				((Decl_localContext)_localctx).id1 = match(IDENT);
 				setState(119);
 				match(T__4);
 				setState(120);
@@ -377,7 +377,7 @@ public class LAParser extends Parser {
 				setState(124);
 				match(T__6);
 				setState(125);
-				((Decl_localContext)_localctx).ident2 = match(IDENT);
+				((Decl_localContext)_localctx).id2 = match(IDENT);
 				setState(126);
 				match(T__4);
 				setState(127);
@@ -475,9 +475,9 @@ public class LAParser extends Parser {
 	}
 
 	public static class IdentificadorContext extends ParserRuleContext {
-		public Token ident;
+		public Token id;
 		public Token IDENT;
-		public List<Token> outrosIdents = new ArrayList<Token>();
+		public List<Token> outrosIds = new ArrayList<Token>();
 		public DimensaoContext dimensao() {
 			return getRuleContext(DimensaoContext.class,0);
 		}
@@ -512,7 +512,7 @@ public class LAParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(141);
-			((IdentificadorContext)_localctx).ident = match(IDENT);
+			((IdentificadorContext)_localctx).id = match(IDENT);
 			setState(146);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -523,7 +523,7 @@ public class LAParser extends Parser {
 				match(T__8);
 				setState(143);
 				((IdentificadorContext)_localctx).IDENT = match(IDENT);
-				((IdentificadorContext)_localctx).outrosIdents.add(((IdentificadorContext)_localctx).IDENT);
+				((IdentificadorContext)_localctx).outrosIds.add(((IdentificadorContext)_localctx).IDENT);
 				}
 				}
 				setState(148);
@@ -964,9 +964,18 @@ public class LAParser extends Parser {
 	public static class Decl_globalContext extends ParserRuleContext {
 		public Token ident1;
 		public ParametrosContext params1;
+		public Decl_localContext decl_local;
+		public List<Decl_localContext> decl1 = new ArrayList<Decl_localContext>();
+		public CmdContext cmd;
+		public List<CmdContext> c1 = new ArrayList<CmdContext>();
 		public Token ident2;
 		public ParametrosContext params2;
+		public List<Decl_localContext> decl2 = new ArrayList<Decl_localContext>();
+		public List<CmdContext> c2 = new ArrayList<CmdContext>();
 		public TerminalNode IDENT() { return getToken(LAParser.IDENT, 0); }
+		public ParametrosContext parametros() {
+			return getRuleContext(ParametrosContext.class,0);
+		}
 		public List<Decl_localContext> decl_local() {
 			return getRuleContexts(Decl_localContext.class);
 		}
@@ -978,9 +987,6 @@ public class LAParser extends Parser {
 		}
 		public CmdContext cmd(int i) {
 			return getRuleContext(CmdContext.class,i);
-		}
-		public ParametrosContext parametros() {
-			return getRuleContext(ParametrosContext.class,0);
 		}
 		public Tipo_estendidoContext tipo_estendido() {
 			return getRuleContext(Tipo_estendidoContext.class,0);
@@ -1040,7 +1046,8 @@ public class LAParser extends Parser {
 					{
 					{
 					setState(193);
-					decl_local();
+					((Decl_globalContext)_localctx).decl_local = decl_local();
+					((Decl_globalContext)_localctx).decl1.add(((Decl_globalContext)_localctx).decl_local);
 					}
 					}
 					setState(198);
@@ -1054,7 +1061,8 @@ public class LAParser extends Parser {
 					{
 					{
 					setState(199);
-					cmd();
+					((Decl_globalContext)_localctx).cmd = cmd();
+					((Decl_globalContext)_localctx).c1.add(((Decl_globalContext)_localctx).cmd);
 					}
 					}
 					setState(204);
@@ -1097,7 +1105,8 @@ public class LAParser extends Parser {
 					{
 					{
 					setState(215);
-					decl_local();
+					((Decl_globalContext)_localctx).decl_local = decl_local();
+					((Decl_globalContext)_localctx).decl2.add(((Decl_globalContext)_localctx).decl_local);
 					}
 					}
 					setState(220);
@@ -1111,7 +1120,8 @@ public class LAParser extends Parser {
 					{
 					{
 					setState(221);
-					cmd();
+					((Decl_globalContext)_localctx).cmd = cmd();
+					((Decl_globalContext)_localctx).c2.add(((Decl_globalContext)_localctx).cmd);
 					}
 					}
 					setState(226);

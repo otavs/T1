@@ -1,2 +1,8 @@
-Ola
+Linha 5: tipo registrox,y,z:realfim_registro nao declarado
+Linha 12: identificador ponto1.x nao declarado
+Linha 12: identificador ponto1.y nao declarado
+Linha 12: identificador ponto1.z nao declarado
+Linha 13: identificador ponto2.x nao declarado
+Linha 13: identificador ponto2.y nao declarado
+Linha 13: identificador ponto2.z nao declarado
 Fim da compilacao

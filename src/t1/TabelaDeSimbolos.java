@@ -12,8 +12,8 @@ public class TabelaDeSimbolos {
         this.escopo = escopo;
     }
     
-    public void adicionarSimbolo(String nome, String tipo) {
-        simbolos.add(new EntradaTabelaDeSimbolos(nome,tipo));
+    public void adicionarSimbolo(String nome, String tipo, String tipoDeDado) {
+        simbolos.add(new EntradaTabelaDeSimbolos(nome, tipo, tipoDeDado));
     }
     /*
     public void adicionarSimbolos(List<String> nomes, String tipo) {

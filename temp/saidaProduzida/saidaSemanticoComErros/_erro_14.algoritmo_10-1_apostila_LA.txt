@@ -1,2 +1,4 @@
-Ola
+Linha 16: identificador valor[i] nao declarado
+Linha 17: identificador valor[i] nao declarado
+Linha 24: identificador valor[i] nao declarado
 Fim da compilacao

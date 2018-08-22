@@ -13,12 +13,12 @@ declaracoes : decl_local_global*;
 decl_local_global : decl_local | decl_global;
 
 decl_local : 'declare' variavel 
-    | 'constante' ident1=IDENT ':' tipo_basico '=' valor_constante
-    | 'tipo' ident2=IDENT ':' tipo;
+    | 'constante' id1=IDENT ':' tipo_basico '=' valor_constante
+    | 'tipo' id2=IDENT ':' tipo;
 
 variavel : id=identificador (',' outrosIds+=identificador)* ':' tipo;
 
-identificador : ident=IDENT ('.' outrosIdents+=IDENT)* dimensao;
+identificador : id=IDENT ('.' outrosIds+=IDENT)* dimensao;
 
 dimensao : ('[' exp_aritmetica ']')*; 
 
@@ -34,8 +34,8 @@ valor_constante : CADEIA | NUM_INT | NUM_REAL | 'verdadeiro' | 'falso';
 
 registro : 'registro' variavel*  'fim_registro';
 
-decl_global : 'procedimento' ident1=IDENT '(' (params1=parametros)? ')' decl_local* cmd* 'fim_procedimento'
-    | 'funcao' ident2=IDENT '(' (params2=parametros)? ')' ':' tipo_estendido decl_local* cmd* 'fim_funcao';
+decl_global : 'procedimento' ident1=IDENT '(' (params1=parametros)? ')' (decl1+=decl_local)* (c1+=cmd)* 'fim_procedimento'
+    | 'funcao' ident2=IDENT '(' (params2=parametros)? ')' ':' tipo_estendido (decl2+=decl_local)* (c2+=cmd)* 'fim_funcao';
 
 parametro : 'var'? id1=identificador (',' id2+=identificador)* ':' tipo_estendido;
 

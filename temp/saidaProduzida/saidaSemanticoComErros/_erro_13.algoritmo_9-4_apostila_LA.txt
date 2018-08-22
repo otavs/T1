@@ -1,2 +1,12 @@
-Ola
+Linha 6: identificador valor1 nao declarado
+Linha 6: identificador valor2 nao declarado
+Linha 7: identificador valor1 nao declarado
+Linha 9: identificador valor2 nao declarado
+Linha 16: identificador valor1 nao declarado
+Linha 16: identificador valor2 nao declarado
+Linha 17: identificador valor1 nao declarado
+Linha 19: identificador valor2 nao declarado
+Linha 26: identificador valor nao declarado
+Linha 27: identificador valor nao declarado
+Linha 29: identificador valor nao declarado
 Fim da compilacao
