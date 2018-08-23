@@ -30,4 +30,15 @@ public class PilhaDeTabelas {
     public void desempilhar() {
         TabelaDeSimbolos ret = pilha.pop();
     }
+    
+    public String tipoDeDadoDoSimbolo(String nome){
+        String tipo = null;
+        for(TabelaDeSimbolos ts : pilha){
+            EntradaTabelaDeSimbolos etds = ts.getSimbolo(nome);
+            if(etds != null) {
+                return etds.getTipoDeDado();
+            }
+        }
+        return "";
+    }
 }

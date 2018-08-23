@@ -20,7 +20,7 @@ variavel : id=identificador (',' outrosIds+=identificador)* ':' tipo;
 
 identificador : id=IDENT ('.' outrosIds+=IDENT)* dimensao;
 
-dimensao : ('[' exp_aritmetica ']')*; 
+dimensao : ('[' exp_aritmetica ']')*;
 
 tipo : registro | tipo_estendido;
 
@@ -32,7 +32,7 @@ tipo_estendido : '^'? tipo_basico_ident;
 
 valor_constante : CADEIA | NUM_INT | NUM_REAL | 'verdadeiro' | 'falso';
 
-registro : 'registro' variavel*  'fim_registro';
+registro : 'registro' variavel* 'fim_registro';
 
 decl_global : 'procedimento' ident1=IDENT '(' (params1=parametros)? ')' (decl1+=decl_local)* (c1+=cmd)* 'fim_procedimento'
     | 'funcao' ident2=IDENT '(' (params2=parametros)? ')' ':' tipo_estendido (decl2+=decl_local)* (c2+=cmd)* 'fim_funcao';
@@ -60,7 +60,7 @@ cmdEnquanto : 'enquanto' expressao 'faca' cmd* 'fim_enquanto';
 
 cmdFaca : 'faca' cmd* 'ate' expressao;
 
-cmdAtribuicao : '^'? identificador '<-' expressao;
+cmdAtribuicao : (ponteiro='^')? identificador '<-' expressao;
 
 cmdChamada : IDENT '(' exp=expressao (',' outrasExp+=expressao)* ')';
 
@@ -107,7 +107,7 @@ expressao : t1=termo_logico (op_logico1 t2+=termo_logico)*;
 
 termo_logico : f1=fator_logico (op_logico2 f2+=fator_logico)*;
 
-fator_logico : 'nao'? parcela_logica;
+fator_logico : (nao='nao')? parcela_logica;
 
 parcela_logica : 'verdadeiro' | 'falso' | exp_relacional;
 

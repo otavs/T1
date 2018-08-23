@@ -1,2 +1,0 @@
-Linha 5: tipo ^inteiro nao declarado
-Fim da compilacao

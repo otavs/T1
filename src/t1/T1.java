@@ -11,6 +11,8 @@ public class T1 {
     
     public static void main(String[] args) throws Exception {
         
+        if(true){
+        
         // Verifica os argumentos recebidos
         if(args.length == 0){
             System.out.println("Compilador LA");
@@ -29,11 +31,11 @@ public class T1 {
         
         // Análise léxica
         LALexer lexer = new LALexer(input);
-        LAErrorListener errorListener = new LAErrorListener();
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         
         // Análise sintática
         LAParser parser = new LAParser(tokens);
+        LAErrorListener errorListener = new LAErrorListener();
         parser.addErrorListener(errorListener);
         LAParser.ProgramaContext arvore = parser.programa();
         
@@ -52,9 +54,9 @@ public class T1 {
         p.close();
         arquivoSaida.close();
         
+        }else{
         
-        /*
-        String nomeArquivoEntrada = "C:\\Users\\otavi\\Desktop\\Compilers_2\\T1\\T1\\casosDeTesteT1\\2.arquivos_com_erros_semanticos\\entrada\\3.algoritmo_3-1_apostila_LA.txt";
+        String nomeArquivoEntrada = "C:\\Users\\otavi\\Desktop\\Compilers_2\\T1\\T1\\casosDeTesteT1\\2.arquivos_com_erros_semanticos\\entrada\\12.algoritmo_8-3_apostila_LA.txt";
         
         // Converte o arquivo de entrada para um input do ANTLR
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(nomeArquivoEntrada));
@@ -77,6 +79,8 @@ public class T1 {
         
         Saida.println("Fim da compilacao");
         System.out.println(Saida.getTexto());
-        */
+        
+        }
+        
     }
 }

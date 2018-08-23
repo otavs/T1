@@ -2101,6 +2101,7 @@ public class LAParser extends Parser {
 	}
 
 	public static class CmdAtribuicaoContext extends ParserRuleContext {
+		public Token ponteiro;
 		public IdentificadorContext identificador() {
 			return getRuleContext(IdentificadorContext.class,0);
 		}
@@ -2139,7 +2140,7 @@ public class LAParser extends Parser {
 			if (_la==T__15) {
 				{
 				setState(378);
-				match(T__15);
+				((CmdAtribuicaoContext)_localctx).ponteiro = match(T__15);
 				}
 			}
 
@@ -3509,6 +3510,7 @@ public class LAParser extends Parser {
 	}
 
 	public static class Fator_logicoContext extends ParserRuleContext {
+		public Token nao;
 		public Parcela_logicaContext parcela_logica() {
 			return getRuleContext(Parcela_logicaContext.class,0);
 		}
@@ -3544,7 +3546,7 @@ public class LAParser extends Parser {
 			if (_la==T__56) {
 				{
 				setState(530);
-				match(T__56);
+				((Fator_logicoContext)_localctx).nao = match(T__56);
 				}
 			}
 

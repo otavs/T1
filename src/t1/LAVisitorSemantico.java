@@ -1,12 +1,58 @@
 package t1;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import org.antlr.v4.runtime.Token;
 
-public class LAVisitorSemantico extends LABaseVisitor<Void> {
+public class LAVisitorSemantico extends LABaseVisitor<String> {
     PilhaDeTabelas pilhaDeTabelas;
     
+    public void print(String s){
+        Saida.println(s);
+    }
+    
+    public boolean isNumerico(String tipo){
+        if(tipo.equals("inteiro") || tipo.equals("real")){
+            return true;
+        }
+        return false;
+    }
+    
+    public String tipoRetorno(String operacao, String op1, String op2){
+        if(operacao.equals("aritmetica")){
+            if(isNumerico(op1) && isNumerico(op2)){
+                if(op1.equals("real") || op2.equals("real")) return "real";
+                else return "inteiro";
+            }
+            else if(op1.equals("literal") && op2.equals("literal")){
+                return "literal";
+            }
+            else{
+                return "tipo_invalido";
+            }
+        }
+        else if(operacao.equals("relacional")){
+            if(isNumerico(op1) && isNumerico(op2)){
+                return "logico";
+            }
+            else{
+                return "tipo_invalido";
+            }
+        }
+        else if(operacao.equals("logica")){
+            if(op1.equals("logico") && op2.equals("logico")){
+                return "logico";
+            }
+            else{
+                return "tipo_invalido";
+            }
+        }
+        return "";
+    }
+    
     @Override
-    public Void visitPrograma(LAParser.ProgramaContext ctx){
+    public String visitPrograma(LAParser.ProgramaContext ctx){
         pilhaDeTabelas = new PilhaDeTabelas();
         pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));
         TabelaDeSimbolos topo = pilhaDeTabelas.topo();
@@ -14,32 +60,36 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
         topo.adicionarSimbolo("inteiro", "tipo", "");
         topo.adicionarSimbolo("real", "tipo", "");
         topo.adicionarSimbolo("logico", "tipo", "");
+        topo.adicionarSimbolo("^literal", "tipo", "");
+        topo.adicionarSimbolo("^inteiro", "tipo", "");
+        topo.adicionarSimbolo("^real", "tipo", "");
+        topo.adicionarSimbolo("^logico", "tipo", "");
         visitDeclaracoes(ctx.declaracoes());
         visitCorpo(ctx.corpo());
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitDeclaracoes(LAParser.DeclaracoesContext ctx){
+    public String visitDeclaracoes(LAParser.DeclaracoesContext ctx){
         for(LAParser.Decl_local_globalContext decl : ctx.decl_local_global()){
             visitDecl_local_global(decl);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitDecl_local_global(LAParser.Decl_local_globalContext ctx){
+    public String visitDecl_local_global(LAParser.Decl_local_globalContext ctx){
         if(ctx.decl_local() != null){
             visitDecl_local(ctx.decl_local());
         }
         else{
             visitDecl_global(ctx.decl_global());
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitDecl_local(LAParser.Decl_localContext ctx){
+    public String visitDecl_local(LAParser.Decl_localContext ctx){
         if(ctx.variavel() != null){
             visitVariavel(ctx.variavel());
         }
@@ -51,106 +101,150 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
             pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "constante", ctx.tipo_basico().getText());
         }
         else{
-            // id2
-            // String tipo_txt = ctx.tipo().getText();
+            String id_txt = ctx.id2.getText();
+            if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+                pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "tipo", "");
+            }
+            else{
+                Saida.println("Linha " + ctx.id2.getTokenSource().getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
+            }
             visitTipo(ctx.tipo());
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitVariavel(LAParser.VariavelContext ctx){
-        if(ctx.parent instanceof LAParser.Decl_localContext){
+    public String visitVariavel(LAParser.VariavelContext ctx){
+        // registro criado a partir da regra variavel
+        if(ctx.tipo().registro() != null){
+            LinkedList<String> listaIds = new LinkedList<String>();
+            visitIdentificador(ctx.id);
+            listaIds.add(ctx.id.getText());
+            for(LAParser.IdentificadorContext id : ctx.outrosIds){
+                visitIdentificador(id);
+                listaIds.add(id.getText());
+            }
+            visitTipo(ctx.tipo());
+            LinkedList<EntradaTabelaDeSimbolos> novosSimbolos = new LinkedList<EntradaTabelaDeSimbolos>();
+            ArrayList<EntradaTabelaDeSimbolos> topo = (ArrayList<EntradaTabelaDeSimbolos>) pilhaDeTabelas.topo().getListaSimbolos();
+            for(String id : listaIds){
+                for(int i = 0; i < topo.size(); i++){
+                    EntradaTabelaDeSimbolos simbolo = topo.get(i);
+                    novosSimbolos.add(new EntradaTabelaDeSimbolos(id + "." + simbolo.getNome(), simbolo.getTipo(), simbolo.getTipoDeDado()));
+                }
+            }
+            pilhaDeTabelas.desempilhar();
+            for(EntradaTabelaDeSimbolos simbolo : novosSimbolos){
+                pilhaDeTabelas.topo().adicionarSimbolo(simbolo);
+            }
+        }
+        // registro criado em declaracao de tipo
+        else if(ctx.parent.parent.parent instanceof LAParser.Decl_localContext){
+            // TO DO:
+            // guarda o struct na memoria
+            // na declaracao de variaveis deve verificar o tipo customizado
+        }
+        // variaveis normais
+        else{
             visitIdentificador(ctx.id);
             String id_txt = ctx.id.getText();
+            String tipo_txt = ctx.tipo().getText();
+            
             if(!pilhaDeTabelas.existeSimbolo(id_txt)){
-                pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", ctx.tipo().getText());
+                if(tipo_txt.charAt(0) == '^'){
+                    pilhaDeTabelas.topo().adicionarSimbolo("^" + id_txt, "variavel", tipo_txt.substring(1));
+                    pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", tipo_txt);
+                }
+                else{
+                    pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", tipo_txt);
+                }
             }
-            else{
+            else if(!(ctx.parent instanceof LAParser.RegistroContext)){
                 Saida.println("Linha " + ctx.id.start.getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
             }
+            
             for(LAParser.IdentificadorContext id : ctx.outrosIds){
                 visitIdentificador(id);
                 id_txt = id.getText();
                 if(!pilhaDeTabelas.existeSimbolo(id_txt)){
-                    pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", ctx.tipo().getText());
+                    if(tipo_txt.charAt(0) == '^'){
+                        pilhaDeTabelas.topo().adicionarSimbolo("^" + id_txt, "variavel", tipo_txt.substring(1));
+                        pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", tipo_txt);
+                    }
+                    else{
+                        pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", tipo_txt);
+                    }
                 }
-                else{
+                else if(!(ctx.parent instanceof LAParser.RegistroContext)){
                     Saida.println("Linha " + id.start.getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
                 }
             }
+            
             visitTipo(ctx.tipo());
-            String tipo_txt = ctx.tipo().getText();
             if(!pilhaDeTabelas.existeSimbolo(tipo_txt)){
                 Saida.println("Linha " + ctx.tipo().start.getLine() + ": tipo " + tipo_txt + " nao declarado");
             }
         }
-        else if(ctx.parent instanceof LAParser.RegistroContext){
-            visitIdentificador(ctx.id);
-            for(LAParser.IdentificadorContext id : ctx.outrosIds){
-                visitIdentificador(id);
-            }
-            visitTipo(ctx.tipo());
-        }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitIdentificador(LAParser.IdentificadorContext ctx) {
-        // verifica id
+    public String visitIdentificador(LAParser.IdentificadorContext ctx) {
+        String nome = ctx.id.getText();
         for(Token id : ctx.outrosIds){
-            // verifica id
+            nome += "." + id.getText();
         }
         visitDimensao(ctx.dimensao());
-        return null;
+        return pilhaDeTabelas.tipoDeDadoDoSimbolo(nome);
     }
     
     @Override
-    public Void visitDimensao(LAParser.DimensaoContext ctx){
+    public String visitDimensao(LAParser.DimensaoContext ctx){
         for(LAParser.Exp_aritmeticaContext exp : ctx.exp_aritmetica()){
             visitExp_aritmetica(exp);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitTipo(LAParser.TipoContext ctx){
+    public String visitTipo(LAParser.TipoContext ctx){
         if(ctx.registro() != null){
             visitRegistro(ctx.registro());
         }
         else{
             visitTipo_estendido(ctx.tipo_estendido());
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitTipo_basico_ident(LAParser.Tipo_basico_identContext ctx){
+    public String visitTipo_basico_ident(LAParser.Tipo_basico_identContext ctx){
         if(ctx.tipo_basico() != null){
             // tipo_basico
         }
         else{
             //IDENT
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitTipo_estendido(LAParser.Tipo_estendidoContext ctx){
+    public String visitTipo_estendido(LAParser.Tipo_estendidoContext ctx){
         visitTipo_basico_ident(ctx.tipo_basico_ident());
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitRegistro(LAParser.RegistroContext ctx){
+    public String visitRegistro(LAParser.RegistroContext ctx){
+        pilhaDeTabelas.empilhar(new TabelaDeSimbolos("registro"));
         for(LAParser.VariavelContext var : ctx.variavel()){
             visitVariavel(var);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitDecl_global(LAParser.Decl_globalContext ctx){
+    public String visitDecl_global(LAParser.Decl_globalContext ctx){
         if(ctx.ident1 != null){
             //ident1
             if(ctx.params1 != null){
@@ -175,41 +269,41 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
                 visitCmd(cmd);
             }
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitParametro(LAParser.ParametroContext ctx){
+    public String visitParametro(LAParser.ParametroContext ctx){
         visitIdentificador(ctx.id1);
         for(LAParser.IdentificadorContext id : ctx.id2){
             visitIdentificador(id);
         }
         visitTipo_estendido(ctx.tipo_estendido());
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitParametros(LAParser.ParametrosContext ctx){
+    public String visitParametros(LAParser.ParametrosContext ctx){
         visitParametro(ctx.param1);
         for(LAParser.ParametroContext param : ctx.param2){
             visitParametro(param);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitCorpo(LAParser.CorpoContext ctx){
+    public String visitCorpo(LAParser.CorpoContext ctx){
         for(LAParser.Decl_localContext decl : ctx.decl_local()){
             visitDecl_local(decl);
         }
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitCmd(LAParser.CmdContext ctx){
+    public String visitCmd(LAParser.CmdContext ctx){
         if (ctx.cmdLeia() != null){
             visitCmdLeia(ctx.cmdLeia());
         }else if (ctx.cmdEscreva() != null){
@@ -231,10 +325,10 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
         }else if (ctx.cmdRetorne() != null){
             visitCmdRetorne(ctx.cmdRetorne());
         }
-        return null;
+        return "";
     }
     @Override
-    public Void visitCmdLeia(LAParser.CmdLeiaContext ctx){
+    public String visitCmdLeia(LAParser.CmdLeiaContext ctx){
         String id_txt = ctx.id1.getText();
         if(!pilhaDeTabelas.existeSimbolo(id_txt)){
             Saida.println("Linha " + ctx.id1.start.getLine() + ": identificador " + id_txt + " nao declarado");
@@ -247,20 +341,20 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
             }
             visitIdentificador(id);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitCmdEscreva(LAParser.CmdEscrevaContext ctx){
+    public String visitCmdEscreva(LAParser.CmdEscrevaContext ctx){
         visitExpressao(ctx.exp1);
         for(LAParser.ExpressaoContext exp : ctx.exp2){
             visitExpressao(exp);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitCmdSe(LAParser.CmdSeContext ctx){
+    public String visitCmdSe(LAParser.CmdSeContext ctx){
         visitExpressao(ctx.e1);
         for(LAParser.CmdContext cmd : ctx.c1){
             visitCmd(cmd);
@@ -270,11 +364,11 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
                 visitCmd(cmd);
             }
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitCmdCaso (LAParser.CmdCasoContext ctx){
+    public String visitCmdCaso (LAParser.CmdCasoContext ctx){
         visitExp_aritmetica(ctx.exp_aritmetica());
         visitSelecao(ctx.selecao());
         if(ctx.cmd() != null){
@@ -282,89 +376,104 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
                 visitCmd(cmd);
             }   
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitCmdPara (LAParser.CmdParaContext ctx){
+    public String visitCmdPara (LAParser.CmdParaContext ctx){
         //IDENT
         visitExp_aritmetica(ctx.ea1);
         visitExp_aritmetica(ctx.ea2);
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitCmdEnquanto (LAParser.CmdEnquantoContext ctx){
+    public String visitCmdEnquanto (LAParser.CmdEnquantoContext ctx){
         visitExpressao(ctx.expressao());
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitCmdFaca (LAParser.CmdFacaContext ctx){
+    public String visitCmdFaca (LAParser.CmdFacaContext ctx){
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
         visitExpressao(ctx.expressao());
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitCmdAtribuicao(LAParser.CmdAtribuicaoContext ctx){
-        visitIdentificador(ctx.identificador());
-        visitExpressao(ctx.expressao());
-        return null;
+    public String visitCmdAtribuicao(LAParser.CmdAtribuicaoContext ctx){
+        String tipoId = visitIdentificador(ctx.identificador());
+        String id_txt = ctx.identificador().getText();
+        if(ctx.ponteiro != null){
+            id_txt = "^" + id_txt;
+        }
+        if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+            Saida.println("Linha " + ctx.identificador().start.getLine() + ": identificador " + id_txt + " nao declarado");
+        }
+        String tipoExp = visitExpressao(ctx.expressao());
+        if(tipoId.charAt(0) == '^'){
+            if(tipoExp.charAt(0) != '&' || !tipoId.substring(1).equals(tipoExp.substring(1))){
+                Saida.println("Linha " + ctx.identificador().start.getLine() + ": atribuicao nao compativel para " + id_txt);
+            }
+        }
+        else if(!tipoId.equals(tipoExp) && !(isNumerico(tipoId) && isNumerico(tipoExp))){
+            Saida.println("Linha " + ctx.identificador().start.getLine() + ": atribuicao nao compativel para " + id_txt);
+        }
+        return "";
     }
     
     @Override
-    public Void visitCmdChamada(LAParser.CmdChamadaContext ctx){
+    public String visitCmdChamada(LAParser.CmdChamadaContext ctx){
         // IDENT
         visitExpressao(ctx.exp);
         for(LAParser.ExpressaoContext exp : ctx.outrasExp){
             visitExpressao(exp);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitCmdRetorne(LAParser.CmdRetorneContext ctx){
+    public String visitCmdRetorne(LAParser.CmdRetorneContext ctx){
         visitExpressao(ctx.expressao());
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitSelecao(LAParser.SelecaoContext ctx){
+    public String visitSelecao(LAParser.SelecaoContext ctx){
         for(LAParser.Item_selecaoContext item : ctx.item_selecao()){
             visitItem_selecao(item);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitItem_selecao(LAParser.Item_selecaoContext ctx){
+    public String visitItem_selecao(LAParser.Item_selecaoContext ctx){
         visitConstantes(ctx.constantes());
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitConstantes(LAParser.ConstantesContext ctx){
+    public String visitConstantes(LAParser.ConstantesContext ctx){
         visitNumero_intervalo(ctx.ni1);
         for(LAParser.Numero_intervaloContext ni : ctx.ni2){
             visitNumero_intervalo(ni);
         }
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitNumero_intervalo(LAParser.Numero_intervaloContext ctx){
+    public String visitNumero_intervalo(LAParser.Numero_intervaloContext ctx){
         if(ctx.opu1 != null){
             visitOp_unario(ctx.opu1);
         }
@@ -373,129 +482,148 @@ public class LAVisitorSemantico extends LABaseVisitor<Void> {
             visitOp_unario(ctx.opu2);
             //ni2
         }        
-        return null;
+        return "";
     }
     
     @Override
-    public Void visitExp_aritmetica(LAParser.Exp_aritmeticaContext ctx){
-        visitTermo(ctx.t1);
-        //op1
+    public String visitExp_aritmetica(LAParser.Exp_aritmeticaContext ctx){
+        String tipo = visitTermo(ctx.t1);
         for(LAParser.TermoContext t : ctx.t2){
-            visitTermo(t);
+            String tipoTermo = visitTermo(t);
+            tipo = tipoRetorno("aritmetica", tipo, tipoTermo);
         }       
-        return null;
+        return tipo;
     }
     
     @Override
-    public Void visitTermo(LAParser.TermoContext ctx){
-        visitFator(ctx.f1);
-        //op2
+    public String visitTermo(LAParser.TermoContext ctx){
+        String tipo = visitFator(ctx.f1);
         for(LAParser.FatorContext f : ctx.f2){
-            visitFator(f);
+            String tipoFator = visitFator(f);
+            tipo = tipoRetorno("aritmetica", tipo, tipoFator);
         }       
-        return null;
+        return tipo;
     }
     
     @Override
-    public Void visitFator(LAParser.FatorContext ctx){
-        visitParcela(ctx.p1);
-        //op3
+    public String visitFator(LAParser.FatorContext ctx){
+        String tipo = visitParcela(ctx.p1);
         for(LAParser.ParcelaContext p : ctx.p2){
-            visitParcela(p);
+            String tipoParcela = visitParcela(p);
+            tipo = tipoRetorno("aritmetica", tipo, tipoParcela);
         }       
-        return null;
+        return tipo;
     }
 
     @Override
-    public Void visitParcela (LAParser.ParcelaContext ctx){
+    public String visitParcela (LAParser.ParcelaContext ctx){
         if(ctx.parcela_unario() != null){
-            if(ctx.op_unario() != null){
-                visitOp_unario(ctx.op_unario());
+            String tipo = visitParcela_unario(ctx.parcela_unario());
+            if(ctx.op_unario() != null && !tipo.equals("inteiro") && !tipo.equals("real")){
+                return "tipo_indefinido";
             }
-            visitParcela_unario(ctx.parcela_unario());
+            return tipo;
         }
         else{
-            visitParcela_nao_unario(ctx.parcela_nao_unario());
+            return visitParcela_nao_unario(ctx.parcela_nao_unario());
         }
-        return null;
     }
     
     @Override
-    public Void visitParcela_unario (LAParser.Parcela_unarioContext ctx){
+    public String visitParcela_unario (LAParser.Parcela_unarioContext ctx){
         if(ctx.identificador() != null) {
-            visitIdentificador(ctx.identificador());
+            String tipo = visitIdentificador(ctx.identificador());
             String id_txt = ctx.identificador().getText();
             if(!pilhaDeTabelas.existeSimbolo(id_txt)){
                 Saida.println("Linha " + ctx.identificador().start.getLine() + ": identificador " + id_txt + " nao declarado");
             }
+            return tipo;
         }
-        else if(ctx.e1 != null){ 
+        else if(ctx.IDENT() != null){
+            String id_txt = ctx.IDENT().getText();
+            if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+                Saida.println("Linha " + ctx.IDENT().getSymbol().getLine() + ": identificador " + id_txt + " nao declarado");
+            }
             visitExpressao(ctx.e1);
             for(LAParser.ExpressaoContext e : ctx.e2){
                 visitExpressao(e);
             }
-        }else if(ctx.e3 != null){
-            visitExpressao(ctx.e3);
+            return pilhaDeTabelas.tipoDeDadoDoSimbolo(id_txt);
         }
-        return null;
+        else if(ctx.NUM_INT() != null){
+            return "inteiro";
+        }
+        else if(ctx.NUM_REAL() != null){
+            return "real";
+        }
+        else{
+            return visitExpressao(ctx.e3);
+        }
     }
     
     @Override
-    public Void visitParcela_nao_unario (LAParser.Parcela_nao_unarioContext ctx){
+    public String visitParcela_nao_unario (LAParser.Parcela_nao_unarioContext ctx){
         if(ctx.identificador() != null){
-            visitIdentificador(ctx.identificador());
+            String tipo = visitIdentificador(ctx.identificador());
             String id_txt = ctx.identificador().getText();
             if(!pilhaDeTabelas.existeSimbolo(id_txt)){
                 Saida.println("Linha " + ctx.identificador().start.getLine() + ": identificador " + id_txt + " nao declarado");
             }
+            return "&" + tipo;
         }
         else{
-            // CADEIA 
+            return "literal";
         }
-        return null;
     }
     
     @Override
-    public Void visitExp_relacional (LAParser.Exp_relacionalContext ctx){
-        visitExp_aritmetica(ctx.e1);
-        if(ctx.op_relacional() != null){ 
-            visitOp_relacional(ctx.op_relacional());
-            visitExp_aritmetica(ctx.e2);
+    public String visitExp_relacional (LAParser.Exp_relacionalContext ctx){
+        String tipo = visitExp_aritmetica(ctx.e1);
+        if(ctx.op_relacional() != null){
+            String tipoExp = visitExp_aritmetica(ctx.e2);
+            tipo = tipoRetorno("relacional", tipo, tipoExp);
         }
-        return null;
+        return tipo;
     }
 
     @Override
-    public Void visitExpressao(LAParser.ExpressaoContext ctx){
-        visitTermo_logico(ctx.t1);
-        //op_logico1
+    public String visitExpressao(LAParser.ExpressaoContext ctx){
+        String tipo = visitTermo_logico(ctx.t1);
         for(LAParser.Termo_logicoContext tl : ctx.t2){
-            visitTermo_logico(tl);
+            String tipoTermo = visitTermo_logico(tl);
+            tipo = tipoRetorno("logica", tipo, tipoTermo);
         }
-        return null;
+        return tipo;
     }
     
     @Override
-    public Void visitTermo_logico(LAParser.Termo_logicoContext ctx){
-        visitFator_logico(ctx.f1);
-        //op_logico2
+    public String visitTermo_logico(LAParser.Termo_logicoContext ctx){
+        String tipo = visitFator_logico(ctx.f1);
         for(LAParser.Fator_logicoContext fl : ctx.f2){
-            visitFator_logico(fl);
+            String tipoFator = visitFator_logico(fl);
+            tipo = tipoRetorno("logica", tipo, tipoFator);
         } 
-        return null;
+        return tipo;
     }
     
     @Override
-    public Void visitFator_logico(LAParser.Fator_logicoContext ctx){
-        visitParcela_logica(ctx.parcela_logica());
-        return null;
-    }
-    
-    @Override
-    public Void visitParcela_logica(LAParser.Parcela_logicaContext ctx){
-        if(ctx.exp_relacional() != null){
-            visitExp_relacional(ctx.exp_relacional());
+    public String visitFator_logico(LAParser.Fator_logicoContext ctx){
+        String tipo = visitParcela_logica(ctx.parcela_logica());
+        if(ctx.nao != null && !tipo.equals("logico")){
+            return "tipo_invalido";
         }
-        return null;
+        else{
+            return tipo;
+        }
+    }
+    
+    @Override
+    public String visitParcela_logica(LAParser.Parcela_logicaContext ctx){
+        if(ctx.exp_relacional() != null){
+            return visitExp_relacional(ctx.exp_relacional());
+        }
+        else{
+            return "logico";
+        }
     }
 }

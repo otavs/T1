@@ -15,12 +15,10 @@ public class TabelaDeSimbolos {
     public void adicionarSimbolo(String nome, String tipo, String tipoDeDado) {
         simbolos.add(new EntradaTabelaDeSimbolos(nome, tipo, tipoDeDado));
     }
-    /*
-    public void adicionarSimbolos(List<String> nomes, String tipo) {
-        for(String s : nomes) {
-            simbolos.add(new EntradaTabelaDeSimbolos(s, tipo));
-        }
-    }*/
+    
+    public void adicionarSimbolo(EntradaTabelaDeSimbolos simbolo) {
+        simbolos.add(simbolo);
+    }
     
     public boolean existeSimbolo(String nome) {
         for(EntradaTabelaDeSimbolos etds : simbolos) {
@@ -33,5 +31,18 @@ public class TabelaDeSimbolos {
     
     public String getEscopo(){
         return escopo;
+    }
+    
+    public EntradaTabelaDeSimbolos getSimbolo(String nome){
+         for(EntradaTabelaDeSimbolos etds : simbolos) {
+            if(etds.getNome().equals(nome)) {
+                return etds;
+            }
+        }
+        return null;
+    }
+    
+    public List<EntradaTabelaDeSimbolos> getListaSimbolos(){
+        return simbolos;
     }
 }

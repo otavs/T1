@@ -1,2 +1,2 @@
-Linha 3: tipo ^inteiro nao declarado
+Linha 7: atribuicao nao compativel para ^endx
 Fim da compilacao
