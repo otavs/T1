@@ -56,7 +56,7 @@ public class T1 {
         
         }else{
         
-        String nomeArquivoEntrada = "C:\\Users\\otavi\\Desktop\\Compilers_2\\T1\\T1\\casosDeTesteT1\\2.arquivos_com_erros_semanticos\\entrada\\12.algoritmo_8-3_apostila_LA.txt";
+        String nomeArquivoEntrada = "C:\\Users\\otavi\\Desktop\\Compilers_2\\T1\\T1\\casosDeTesteT1\\2.arquivos_com_erros_semanticos\\entrada\\13.algoritmo_9-4_apostila_LA.txt";
         
         // Converte o arquivo de entrada para um input do ANTLR
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(nomeArquivoEntrada));

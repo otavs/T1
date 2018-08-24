@@ -3,8 +3,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/rafap/Desktop/github/T1/src/t1/LAVisitorSemantico.java</file>
-            <file>file:/C:/Users/rafap/Desktop/github/T1/src/t1/LA.g4</file>
+            <file>file:/C:/Users/otavi/Desktop/Compilers_2/T1/T1/src/t1/TabelaDeSimbolos.java</file>
+            <file>file:/C:/Users/otavi/Desktop/Compilers_2/T1/T1/src/t1/EntradaTabelaDeSimbolos.java</file>
+            <file>file:/C:/Users/otavi/Desktop/Compilers_2/T1/T1/src/t1/LA.g4</file>
+            <file>file:/C:/Users/otavi/Desktop/Compilers_2/T1/T1/src/t1/T1.java</file>
+            <file>file:/C:/Users/otavi/Desktop/Compilers_2/T1/T1/src/t1/LAVisitorSemantico.java</file>
+            <file>file:/C:/Users/otavi/Desktop/Compilers_2/T1/T1/src/t1/PilhaDeTabelas.java</file>
         </group>
     </open-files>
 </project-private>

@@ -1,12 +1,15 @@
 package t1;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import org.antlr.v4.runtime.Token;
 
 public class LAVisitorSemantico extends LABaseVisitor<String> {
     PilhaDeTabelas pilhaDeTabelas;
+    HashMap<String, String> mapTipos;
+    HashMap<String, LinkedList<EntradaTabelaDeSimbolos>> mapRegistros;
     
     public void print(String s){
         Saida.println(s);
@@ -54,6 +57,8 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     @Override
     public String visitPrograma(LAParser.ProgramaContext ctx){
         pilhaDeTabelas = new PilhaDeTabelas();
+        mapTipos = new HashMap<String, String>();
+        mapRegistros = new HashMap<String, LinkedList<EntradaTabelaDeSimbolos>>();
         pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));
         TabelaDeSimbolos topo = pilhaDeTabelas.topo();
         topo.adicionarSimbolo("literal", "tipo", "");
@@ -64,6 +69,14 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         topo.adicionarSimbolo("^inteiro", "tipo", "");
         topo.adicionarSimbolo("^real", "tipo", "");
         topo.adicionarSimbolo("^logico", "tipo", "");
+        mapTipos.put("literal", "literal");
+        mapTipos.put("inteiro", "inteiro");
+        mapTipos.put("real", "real");
+        mapTipos.put("logico", "logico");
+        mapTipos.put("^literal", "^literal");
+        mapTipos.put("^inteiro", "^inteiro");
+        mapTipos.put("^real", "^real");
+        mapTipos.put("^logico", "^logico");
         visitDeclaracoes(ctx.declaracoes());
         visitCorpo(ctx.corpo());
         return "";
@@ -102,11 +115,16 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         }
         else{
             String id_txt = ctx.id2.getText();
-            if(!pilhaDeTabelas.existeSimbolo(id_txt)){
-                pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "tipo", "");
+            if(pilhaDeTabelas.existeSimbolo(id_txt)){
+                Saida.println("Linha " + ctx.id2.getTokenSource().getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
+            }
+            if(ctx.tipo().registro() != null){
+                mapRegistros.put(id_txt, new LinkedList<EntradaTabelaDeSimbolos>());
+    	        pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "registro", "");
+                visitTipo(ctx.tipo());
             }
             else{
-                Saida.println("Linha " + ctx.id2.getTokenSource().getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
+                // idk
             }
             visitTipo(ctx.tipo());
         }
@@ -140,8 +158,15 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         }
         // registro criado em declaracao de tipo
         else if(ctx.parent.parent.parent instanceof LAParser.Decl_localContext){
-            // TO DO:
-            // guarda o struct na memoria
+            String idRegistro = ((LAParser.Decl_localContext)ctx.parent.parent.parent).id2.getText();
+            String tipo_txt = ctx.tipo().getText();
+            visitIdentificador(ctx.id);
+            mapRegistros.get(idRegistro).add(new EntradaTabelaDeSimbolos(ctx.id.getText(), "variavel", tipo_txt));
+            for(LAParser.IdentificadorContext id : ctx.outrosIds){
+                visitIdentificador(id);
+                mapRegistros.get(idRegistro).add(new EntradaTabelaDeSimbolos(id.getText(), "variavel", tipo_txt));
+            }
+            
             // na declaracao de variaveis deve verificar o tipo customizado
         }
         // variaveis normais
@@ -150,22 +175,35 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
             String id_txt = ctx.id.getText();
             String tipo_txt = ctx.tipo().getText();
             
-            if(!pilhaDeTabelas.existeSimbolo(id_txt)){
-                if(tipo_txt.charAt(0) == '^'){
-                    pilhaDeTabelas.topo().adicionarSimbolo("^" + id_txt, "variavel", tipo_txt.substring(1));
+            // O tipo é um registro
+            if(mapRegistros.get(tipo_txt) != null){
+                LinkedList <EntradaTabelaDeSimbolos> listaSimbolos = mapRegistros.get(tipo_txt);
+                if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+                    for(EntradaTabelaDeSimbolos simbolo : listaSimbolos){
+                        pilhaDeTabelas.topo().adicionarSimbolo(id_txt + "." + simbolo.getNome(), simbolo.getTipo(), simbolo.getTipoDeDado());
+                    }
                     pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", tipo_txt);
                 }
                 else{
-                    pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", tipo_txt);
+                    Saida.println("Linha " + ctx.id.start.getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
+                }
+                
+                for(LAParser.IdentificadorContext id : ctx.outrosIds){
+                    visitIdentificador(id);
+                    id_txt = id.getText();
+                    if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+                        for(EntradaTabelaDeSimbolos simbolo : listaSimbolos){
+                            pilhaDeTabelas.topo().adicionarSimbolo(id_txt + "." + simbolo.getNome(), simbolo.getTipo(), simbolo.getTipoDeDado());
+                        }
+                        pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", tipo_txt);
+                    }
+                    else{
+                        Saida.println("Linha " + id.start.getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
+                    }
                 }
             }
-            else if(!(ctx.parent instanceof LAParser.RegistroContext)){
-                Saida.println("Linha " + ctx.id.start.getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
-            }
-            
-            for(LAParser.IdentificadorContext id : ctx.outrosIds){
-                visitIdentificador(id);
-                id_txt = id.getText();
+            // O tipo não é registro
+            else{
                 if(!pilhaDeTabelas.existeSimbolo(id_txt)){
                     if(tipo_txt.charAt(0) == '^'){
                         pilhaDeTabelas.topo().adicionarSimbolo("^" + id_txt, "variavel", tipo_txt.substring(1));
@@ -176,10 +214,26 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
                     }
                 }
                 else if(!(ctx.parent instanceof LAParser.RegistroContext)){
-                    Saida.println("Linha " + id.start.getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
+                    Saida.println("Linha " + ctx.id.start.getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
+                }
+
+                for(LAParser.IdentificadorContext id : ctx.outrosIds){
+                    visitIdentificador(id);
+                    id_txt = id.getText();
+                    if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+                        if(tipo_txt.charAt(0) == '^'){
+                            pilhaDeTabelas.topo().adicionarSimbolo("^" + id_txt, "variavel", tipo_txt.substring(1));
+                            pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", tipo_txt);
+                        }
+                        else{
+                            pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "variavel", tipo_txt);
+                        }
+                    }
+                    else if(!(ctx.parent instanceof LAParser.RegistroContext)){
+                        Saida.println("Linha " + id.start.getLine() + ": identificador " + id_txt + " ja declarado anteriormente");
+                    }
                 }
             }
-            
             visitTipo(ctx.tipo());
             if(!pilhaDeTabelas.existeSimbolo(tipo_txt)){
                 Saida.println("Linha " + ctx.tipo().start.getLine() + ": tipo " + tipo_txt + " nao declarado");
