@@ -1,6 +1,6 @@
 Status atual dos testes:  
 Análise Sintática: 62/62  
-Análise Semântica: 12/18  
+Análise Semântica: 15/18  
 Geração de Código: 0/20  
 
 Comando para executar o corretor:  
