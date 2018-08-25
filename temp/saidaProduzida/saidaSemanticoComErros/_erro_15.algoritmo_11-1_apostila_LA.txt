@@ -14,22 +14,21 @@ Linha 45: identificador vinho.anoSafra nao declarado
 Linha 46: identificador vinho.anoEnvasamento nao declarado
 Linha 47: identificador vinho.preco nao declarado
 Linha 48: identificador vinho.unidades nao declarado
+Linha 49: comando retorne nao permitido nesse escopo
 Linha 49: identificador vinho.nome nao declarado
 Linha 55: identificador vinho.unidades nao declarado
 Linha 55: identificador vinho.preco nao declarado
 Linha 74: identificador vinho[i] nao declarado
-Linha 75: identificador calculeVendas nao declarado
 Linha 75: identificador vinho[i] nao declarado
-Linha 75: atribuicao nao compativel para somaVendas
-Linha 76: identificador calculeVendas nao declarado
+Linha 75: incompatibilidade de parametros na chamada de calculeVendas
 Linha 76: identificador vinho[i] nao declarado
-Linha 77: identificador calculeVendas nao declarado
+Linha 76: incompatibilidade de parametros na chamada de calculeVendas
 Linha 77: identificador vinho[i] nao declarado
-Linha 77: atribuicao nao compativel para maiorVenda
-Linha 85: identificador calculeVendas nao declarado
+Linha 77: incompatibilidade de parametros na chamada de calculeVendas
 Linha 85: identificador vinho[i] nao declarado
+Linha 85: incompatibilidade de parametros na chamada de calculeVendas
 Linha 86: identificador vinho[i] nao declarado
-Linha 93: identificador calculeVendas nao declarado
 Linha 93: identificador vinho[i] nao declarado
+Linha 93: incompatibilidade de parametros na chamada de calculeVendas
 Linha 94: identificador vinho[i] nao declarado
 Fim da compilacao

@@ -10,6 +10,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     PilhaDeTabelas pilhaDeTabelas;
     HashMap<String, String> mapTipos;
     HashMap<String, LinkedList<EntradaTabelaDeSimbolos>> mapRegistros;
+    HashMap<String, LinkedList<String>> mapParametros;
     
     public void print(String s){
         Saida.println(s);
@@ -59,6 +60,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         pilhaDeTabelas = new PilhaDeTabelas();
         mapTipos = new HashMap<String, String>();
         mapRegistros = new HashMap<String, LinkedList<EntradaTabelaDeSimbolos>>();
+        mapParametros = new HashMap<String, LinkedList<String>>();
         pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));
         TabelaDeSimbolos topo = pilhaDeTabelas.topo();
         topo.adicionarSimbolo("literal", "tipo", "");
@@ -274,24 +276,22 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     @Override
     public String visitTipo_basico_ident(LAParser.Tipo_basico_identContext ctx){
         if(ctx.tipo_basico() != null){
-            // tipo_basico
+            return ctx.tipo_basico().getText();
         }
         else{
-            //IDENT
+            return ctx.IDENT().getText();
         }
-        return "";
     }
     
     @Override
     public String visitTipo_estendido(LAParser.Tipo_estendidoContext ctx){
-        visitTipo_basico_ident(ctx.tipo_basico_ident());
-        return "";
+        return visitTipo_basico_ident(ctx.tipo_basico_ident());
     }
     
     @Override
     public String visitRegistro(LAParser.RegistroContext ctx){
-        pilhaDeTabelas.empilhar(new TabelaDeSimbolos("registro"));
         for(LAParser.VariavelContext var : ctx.variavel()){
+            if(ctx.parent.parent instanceof LAParser.VariavelContext) pilhaDeTabelas.empilhar(new TabelaDeSimbolos("registro"));
             visitVariavel(var);
         }
         return "";
@@ -299,8 +299,12 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     
     @Override
     public String visitDecl_global(LAParser.Decl_globalContext ctx){
+        // Procedimento
         if(ctx.ident1 != null){
-            //ident1
+            pilhaDeTabelas.topo().adicionarSimbolo(ctx.ident1.getText(), "procedimento", "");
+            mapParametros.put(ctx.ident1.getText(), new LinkedList<String>());
+            pilhaDeTabelas.empilhar(new TabelaDeSimbolos("procedimento"));
+            pilhaDeTabelas.topo().adicionarSimbolo(ctx.ident1.getText(), "procedimento", "");
             if(ctx.params1 != null){
                 visitParametros(ctx.params1);
             }
@@ -310,8 +314,13 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
             for(LAParser.CmdContext cmd : ctx.c1){
                 visitCmd(cmd);
             }
+            pilhaDeTabelas.desempilhar();
+        // Função
         }else {
-            //ident2
+            pilhaDeTabelas.topo().adicionarSimbolo(ctx.ident2.getText(), "funcao", ctx.tipo_estendido().getText());
+            mapParametros.put(ctx.ident2.getText(), new LinkedList<String>());
+            pilhaDeTabelas.empilhar(new TabelaDeSimbolos("funcao"));
+            pilhaDeTabelas.topo().adicionarSimbolo(ctx.ident2.getText(), "funcao", ctx.tipo_estendido().getText());
             if(ctx.params2 != null){
                 visitParametros(ctx.params2);
             }
@@ -322,6 +331,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
             for(LAParser.CmdContext cmd : ctx.c2){
                 visitCmd(cmd);
             }
+            pilhaDeTabelas.desempilhar();
         }
         return "";
     }
@@ -329,18 +339,32 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     @Override
     public String visitParametro(LAParser.ParametroContext ctx){
         visitIdentificador(ctx.id1);
+        String tipo_txt = ctx.tipo_estendido().getText();
+        pilhaDeTabelas.topo().adicionarSimbolo(ctx.id1.getText(), "variavel", tipo_txt);
         for(LAParser.IdentificadorContext id : ctx.id2){
             visitIdentificador(id);
+            pilhaDeTabelas.topo().adicionarSimbolo(id.getText(), "variavel", tipo_txt);
         }
-        visitTipo_estendido(ctx.tipo_estendido());
-        return "";
+        return visitTipo_estendido(ctx.tipo_estendido());
     }
     
     @Override
     public String visitParametros(LAParser.ParametrosContext ctx){
-        visitParametro(ctx.param1);
+        LAParser.Decl_globalContext declGlobal = ((LAParser.Decl_globalContext)(ctx.parent));
+        String nomeFuncao;
+        // procedimento
+        if(declGlobal.ident1 != null){
+            nomeFuncao = declGlobal.ident1.getText();
+        }
+        // função
+        else{
+            nomeFuncao = declGlobal.ident2.getText();
+        }
+        String tipoParam = visitParametro(ctx.param1);
+        mapParametros.get(nomeFuncao).add(tipoParam);
         for(LAParser.ParametroContext param : ctx.param2){
-            visitParametro(param);
+            tipoParam = visitParametro(param);
+            mapParametros.get(nomeFuncao).add(tipoParam);
         }
         return "";
     }
@@ -496,6 +520,8 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     
     @Override
     public String visitCmdRetorne(LAParser.CmdRetorneContext ctx){
+        if(!pilhaDeTabelas.topo().getEscopo().equals("funcao"))
+            Saida.println("Linha " + ctx.start.getLine() + ": comando retorne nao permitido nesse escopo");
         visitExpressao(ctx.expressao());
         return "";
     }
@@ -598,10 +624,18 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
             if(!pilhaDeTabelas.existeSimbolo(id_txt)){
                 Saida.println("Linha " + ctx.IDENT().getSymbol().getLine() + ": identificador " + id_txt + " nao declarado");
             }
-            visitExpressao(ctx.e1);
+            String tipoExp = visitExpressao(ctx.e1);         
+            LinkedList<String> listaParams = mapParametros.get(id_txt);
+            boolean compativel = true;
+            compativel = !listaParams.isEmpty() && compativel && listaParams.get(0).equals(tipoExp);
+            int i = 0;
             for(LAParser.ExpressaoContext e : ctx.e2){
-                visitExpressao(e);
+                tipoExp = visitExpressao(e);
+                i++;
+                compativel = i <= listaParams.size() && compativel && listaParams.get(i).equals(tipoExp);
             }
+            if(listaParams.size() != ctx.e2.size()+1) compativel = false;
+            if(!compativel) Saida.println("Linha " + ctx.start.getLine() + ": incompatibilidade de parametros na chamada de " + id_txt);
             return pilhaDeTabelas.tipoDeDadoDoSimbolo(id_txt);
         }
         else if(ctx.NUM_INT() != null){

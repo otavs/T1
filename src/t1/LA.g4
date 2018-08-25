@@ -72,7 +72,7 @@ item_selecao : constantes ':' cmd*;
 
 constantes : ni1=numero_intervalo (',' ni2+=numero_intervalo)*;
 
-numero_intervalo : opu1=op_unario? ni1=NUM_INT ('..'  (opu2=op_unario)? ni2=NUM_INT)?;
+numero_intervalo : opu1=op_unario? ni1=NUM_INT ('..' (opu2=op_unario)? ni2=NUM_INT)?;
 
 op_unario : '-';
 
