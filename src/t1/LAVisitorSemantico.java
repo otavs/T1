@@ -175,6 +175,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         else{
             visitIdentificador(ctx.id);
             String id_txt = ctx.id.getText();
+            if(id_txt.indexOf('[') != -1) id_txt = id_txt.substring(0, id_txt.indexOf('['));
             String tipo_txt = ctx.tipo().getText();
             
             // O tipo é um registro
@@ -222,6 +223,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
                 for(LAParser.IdentificadorContext id : ctx.outrosIds){
                     visitIdentificador(id);
                     id_txt = id.getText();
+                    if(id_txt.indexOf('[') != -1) id_txt = id_txt.substring(0, id_txt.indexOf('['));
                     if(!pilhaDeTabelas.existeSimbolo(id_txt)){
                         if(tipo_txt.charAt(0) == '^'){
                             pilhaDeTabelas.topo().adicionarSimbolo("^" + id_txt, "variavel", tipo_txt.substring(1));
@@ -408,12 +410,14 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     @Override
     public String visitCmdLeia(LAParser.CmdLeiaContext ctx){
         String id_txt = ctx.id1.getText();
+        if(id_txt.indexOf('[') != -1) id_txt = id_txt.substring(0, id_txt.indexOf('['));
         if(!pilhaDeTabelas.existeSimbolo(id_txt)){
             Saida.println("Linha " + ctx.id1.start.getLine() + ": identificador " + id_txt + " nao declarado");
         }
         visitIdentificador(ctx.id1);
         for(LAParser.IdentificadorContext id : ctx.id2){
             id_txt = id.getText();
+            if(id_txt.indexOf('[') != -1) id_txt = id_txt.substring(0, id_txt.indexOf('['));
             if(!pilhaDeTabelas.existeSimbolo(id_txt)){
                 Saida.println("Linha " + ctx.id1.start.getLine() + ": identificador " + id_txt + " nao declarado");
             }
@@ -490,20 +494,24 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     public String visitCmdAtribuicao(LAParser.CmdAtribuicaoContext ctx){
         String tipoId = visitIdentificador(ctx.identificador());
         String id_txt = ctx.identificador().getText();
+        String id_txt_certo = id_txt + "";
+        if(id_txt.indexOf('[') != -1) id_txt = id_txt.substring(0, id_txt.indexOf('['));
         if(ctx.ponteiro != null){
             id_txt = "^" + id_txt;
         }
-        if(!pilhaDeTabelas.existeSimbolo(id_txt)){
-            Saida.println("Linha " + ctx.identificador().start.getLine() + ": identificador " + id_txt + " nao declarado");
-        }
         String tipoExp = visitExpressao(ctx.expressao());
-        if(tipoId.charAt(0) == '^'){
-            if(tipoExp.charAt(0) != '&' || !tipoId.substring(1).equals(tipoExp.substring(1))){
-                Saida.println("Linha " + ctx.identificador().start.getLine() + ": atribuicao nao compativel para " + id_txt);
-            }
+        if(!pilhaDeTabelas.existeSimbolo(id_txt)){
+            Saida.println("Linha " + ctx.identificador().start.getLine() + ": identificador " + id_txt_certo + " nao declarado");
         }
-        else if(!tipoId.equals(tipoExp) && !(isNumerico(tipoId) && isNumerico(tipoExp))){
-            Saida.println("Linha " + ctx.identificador().start.getLine() + ": atribuicao nao compativel para " + id_txt);
+        else{
+            if(tipoId.charAt(0) == '^'){
+                if(tipoExp.charAt(0) != '&' || !tipoId.substring(1).equals(tipoExp.substring(1))){
+                    Saida.println("Linha " + ctx.identificador().start.getLine() + ": atribuicao nao compativel para " + id_txt);
+                }
+            }
+            else if(!tipoId.equals(tipoExp) && !(isNumerico(tipoId) && isNumerico(tipoExp))){
+                Saida.println("Linha " + ctx.identificador().start.getLine() + ": atribuicao nao compativel para " + id_txt_certo);
+            }
         }
         return "";
     }
@@ -614,6 +622,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         if(ctx.identificador() != null) {
             String tipo = visitIdentificador(ctx.identificador());
             String id_txt = ctx.identificador().getText();
+            if(id_txt.indexOf('[') != -1) id_txt = id_txt.substring(0, id_txt.indexOf('['));
             if(!pilhaDeTabelas.existeSimbolo(id_txt)){
                 Saida.println("Linha " + ctx.identificador().start.getLine() + ": identificador " + id_txt + " nao declarado");
             }
