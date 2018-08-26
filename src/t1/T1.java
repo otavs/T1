@@ -11,17 +11,11 @@ public class T1 {
     
     public static void main(String[] args) throws Exception {
         
-        if(true){
-        
         // Verifica os argumentos recebidos
-        if(args.length == 0){
+        if(args.length != 2){
             System.out.println("Compilador LA");
             System.out.println("Devem ser passados 2 argumentos: o arquivo de entrada e o arquivo de saída");
             System.exit(0);
-        }
-        else if(args.length != 2){
-            System.out.println("Erro: Devem ser passados 2 argumentos: o arquivo de entrada e o arquivo de saída");
-            System.exit(1);
         }
         String nomeArquivoEntrada = args[0];
         String nomeArquivoSaida = args[1];
@@ -40,47 +34,19 @@ public class T1 {
         LAParser.ProgramaContext arvore = parser.programa();
         
         // Análise semântica
-        if(Saida.getTexto().isEmpty()){
+        if(Saida.getTexto().isEmpty()){ // apenas se não houve erro na análise sintática
             LAVisitorSemantico visitor = new LAVisitorSemantico();
             visitor.visit(arvore);
         }
         
         Saida.println("Fim da compilacao");
         
-        // Escreve a saida no arquivo de saida
+        // Escreve a saída no arquivo de saída
         FileOutputStream arquivoSaida = new FileOutputStream(nomeArquivoSaida);
         PrintWriter p = new PrintWriter(arquivoSaida);
         p.write(Saida.getTexto());
         p.close();
         arquivoSaida.close();
-        
-        }else{
-        
-        String nomeArquivoEntrada = "C:\\Users\\otavi\\Desktop\\Compilers_2\\T1\\T1\\casosDeTesteT1\\2.arquivos_com_erros_semanticos\\entrada\\14.algoritmo_10-1_apostila_LA.txt";
-        
-        // Converte o arquivo de entrada para um input do ANTLR
-        ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(nomeArquivoEntrada));
-        
-        // Análise léxica
-        LALexer lexer = new LALexer(input);
-        LAErrorListener errorListener = new LAErrorListener();
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        
-        // Análise sintática
-        LAParser parser = new LAParser(tokens);
-        parser.addErrorListener(errorListener);
-        LAParser.ProgramaContext arvore = parser.programa();
-        
-        // Análise semântica
-        if(Saida.getTexto().isEmpty()){
-            LAVisitorSemantico visitor = new LAVisitorSemantico();
-            visitor.visit(arvore);
-        }
-        
-        Saida.println("Fim da compilacao");
-        System.out.println(Saida.getTexto());
-        
-        }
         
     }
 }

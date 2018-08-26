@@ -8,13 +8,8 @@ import org.antlr.v4.runtime.Token;
 
 public class LAVisitorSemantico extends LABaseVisitor<String> {
     PilhaDeTabelas pilhaDeTabelas;
-    HashMap<String, String> mapTipos;
     HashMap<String, LinkedList<EntradaTabelaDeSimbolos>> mapRegistros;
     HashMap<String, LinkedList<String>> mapParametros;
-    
-    public void print(String s){
-        Saida.println(s);
-    }
     
     public boolean isNumerico(String tipo){
         if(tipo.equals("inteiro") || tipo.equals("real")){
@@ -58,7 +53,6 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     @Override
     public String visitPrograma(LAParser.ProgramaContext ctx){
         pilhaDeTabelas = new PilhaDeTabelas();
-        mapTipos = new HashMap<String, String>();
         mapRegistros = new HashMap<String, LinkedList<EntradaTabelaDeSimbolos>>();
         mapParametros = new HashMap<String, LinkedList<String>>();
         pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));
@@ -71,14 +65,6 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         topo.adicionarSimbolo("^inteiro", "tipo", "");
         topo.adicionarSimbolo("^real", "tipo", "");
         topo.adicionarSimbolo("^logico", "tipo", "");
-        mapTipos.put("literal", "literal");
-        mapTipos.put("inteiro", "inteiro");
-        mapTipos.put("real", "real");
-        mapTipos.put("logico", "logico");
-        mapTipos.put("^literal", "^literal");
-        mapTipos.put("^inteiro", "^inteiro");
-        mapTipos.put("^real", "^real");
-        mapTipos.put("^logico", "^logico");
         visitDeclaracoes(ctx.declaracoes());
         visitCorpo(ctx.corpo());
         return "";
@@ -109,9 +95,6 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
             visitVariavel(ctx.variavel());
         }
         else if(ctx.id1 != null){
-            // id1
-            // tipo_basico
-            // valor_constante
             String id_txt = ctx.id1.getText();
             pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "constante", ctx.tipo_basico().getText());
         }
@@ -123,10 +106,9 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
             if(ctx.tipo().registro() != null){
                 mapRegistros.put(id_txt, new LinkedList<EntradaTabelaDeSimbolos>());
     	        pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "registro", "");
-                visitTipo(ctx.tipo());
             }
             else{
-                // idk
+                pilhaDeTabelas.topo().adicionarSimbolo(id_txt, "tipo", ctx.tipo().getText());
             }
             visitTipo(ctx.tipo());
         }
@@ -135,7 +117,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     
     @Override
     public String visitVariavel(LAParser.VariavelContext ctx){
-        // registro criado a partir da regra variavel
+        // variavel de tipo registro criada a partir da regra variavel
         if(ctx.tipo().registro() != null){
             LinkedList<String> listaIds = new LinkedList<String>();
             visitIdentificador(ctx.id);
@@ -168,8 +150,6 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
                 visitIdentificador(id);
                 mapRegistros.get(idRegistro).add(new EntradaTabelaDeSimbolos(id.getText(), "variavel", tipo_txt));
             }
-            
-            // na declaracao de variaveis deve verificar o tipo customizado
         }
         // variaveis normais
         else{
@@ -178,7 +158,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
             if(id_txt.indexOf('[') != -1) id_txt = id_txt.substring(0, id_txt.indexOf('['));
             String tipo_txt = ctx.tipo().getText();
             
-            // O tipo é um registro
+            // O tipo da variavel é um registro
             if(mapRegistros.get(tipo_txt) != null){
                 LinkedList <EntradaTabelaDeSimbolos> listaSimbolos = mapRegistros.get(tipo_txt);
                 if(!pilhaDeTabelas.existeSimbolo(id_txt)){
@@ -205,7 +185,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
                     }
                 }
             }
-            // O tipo não é registro
+            // O tipo da variável não é registro
             else{
                 if(!pilhaDeTabelas.existeSimbolo(id_txt)){
                     if(tipo_txt.charAt(0) == '^'){
@@ -343,9 +323,20 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         visitIdentificador(ctx.id1);
         String tipo_txt = ctx.tipo_estendido().getText();
         pilhaDeTabelas.topo().adicionarSimbolo(ctx.id1.getText(), "variavel", tipo_txt);
+        LinkedList<EntradaTabelaDeSimbolos> listaAtributos = mapRegistros.get(tipo_txt);
+        if(listaAtributos != null){
+            for(EntradaTabelaDeSimbolos etds : listaAtributos){
+                pilhaDeTabelas.topo().adicionarSimbolo(ctx.id1.getText() + "." + etds.getNome(), etds.getTipo(), etds.getTipoDeDado());
+            }
+        }
         for(LAParser.IdentificadorContext id : ctx.id2){
             visitIdentificador(id);
             pilhaDeTabelas.topo().adicionarSimbolo(id.getText(), "variavel", tipo_txt);
+            if(listaAtributos != null){
+                for(EntradaTabelaDeSimbolos etds : listaAtributos){
+                    pilhaDeTabelas.topo().adicionarSimbolo(id.getText() + "." + etds.getNome(), etds.getTipo(), etds.getTipoDeDado());
+                }
+            }
         }
         return visitTipo_estendido(ctx.tipo_estendido());
     }
@@ -354,14 +345,8 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     public String visitParametros(LAParser.ParametrosContext ctx){
         LAParser.Decl_globalContext declGlobal = ((LAParser.Decl_globalContext)(ctx.parent));
         String nomeFuncao;
-        // procedimento
-        if(declGlobal.ident1 != null){
-            nomeFuncao = declGlobal.ident1.getText();
-        }
-        // função
-        else{
-            nomeFuncao = declGlobal.ident2.getText();
-        }
+        if(declGlobal.ident1 != null) nomeFuncao = declGlobal.ident1.getText(); // procedimento
+        else nomeFuncao = declGlobal.ident2.getText(); // função
         String tipoParam = visitParametro(ctx.param1);
         mapParametros.get(nomeFuncao).add(tipoParam);
         for(LAParser.ParametroContext param : ctx.param2){
@@ -463,7 +448,6 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     
     @Override
     public String visitCmdPara (LAParser.CmdParaContext ctx){
-        //IDENT
         visitExp_aritmetica(ctx.ea1);
         visitExp_aritmetica(ctx.ea2);
         for(LAParser.CmdContext cmd : ctx.cmd()){
@@ -518,7 +502,6 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     
     @Override
     public String visitCmdChamada(LAParser.CmdChamadaContext ctx){
-        // IDENT
         visitExpressao(ctx.exp);
         for(LAParser.ExpressaoContext exp : ctx.outrasExp){
             visitExpressao(exp);
@@ -565,10 +548,8 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         if(ctx.opu1 != null){
             visitOp_unario(ctx.opu1);
         }
-        //ni1
         if(ctx.opu2 != null){
             visitOp_unario(ctx.opu2);
-            //ni2
         }        
         return "";
     }
