@@ -6,12 +6,13 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 public class T1 {
     
     public static void main(String[] args) throws Exception {
         
-        boolean debug = false;
+        boolean debug = true;
         
         if(!debug){
         
@@ -46,7 +47,9 @@ public class T1 {
         
         // Geração de código C
         if(Saida.isEmpty()){ // apenas se não houve erro na análise semântica
-            Saida.println("Ola");
+            LAListenerGerador listener = new LAListenerGerador();
+            ParseTreeWalker walker = new ParseTreeWalker();
+            walker.walk(listener, arvore);
         }
         else{
             Saida.println("Fim da compilacao");
@@ -60,6 +63,8 @@ public class T1 {
         arquivoSaida.close();
         
         }
+        
+        // DEBUG
         else{
             
             String nomeArquivoEntrada = "C:\\Users\\otavi\\Desktop\\Compilers_2\\T1\\T1\\casosDeTesteT1\\3.arquivos_sem_erros\\1.entrada\\1.declaracao_leitura_impressao_inteiro.alg";
@@ -85,7 +90,9 @@ public class T1 {
 
             // Geração de código C
             if(Saida.getTexto().isEmpty()){
-                Saida.println("Código gerado");
+                LAListenerGerador listener = new LAListenerGerador();
+                ParseTreeWalker walker = new ParseTreeWalker();
+                walker.walk(listener, arvore);
             }
             else{
                 Saida.println("Fim da compilacao");
