@@ -272,8 +272,8 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     
     @Override
     public String visitRegistro(LAParser.RegistroContext ctx){
-        for(LAParser.VariavelContext var : ctx.variavel()){
-            if(ctx.parent.parent instanceof LAParser.VariavelContext) pilhaDeTabelas.empilhar(new TabelaDeSimbolos("registro"));
+        if(ctx.parent.parent instanceof LAParser.VariavelContext) pilhaDeTabelas.empilhar(new TabelaDeSimbolos("registro"));
+        for(LAParser.VariavelContext var : ctx.variavel()){    
             visitVariavel(var);
         }
         return "";
@@ -448,41 +448,56 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
     
     @Override
     public String visitCmdPara (LAParser.CmdParaContext ctx){
+        pilhaDeTabelas.empilhar(new TabelaDeSimbolos("para"));
         visitExp_aritmetica(ctx.ea1);
         visitExp_aritmetica(ctx.ea2);
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
+        pilhaDeTabelas.desempilhar();
         return "";
     }
     
     @Override
     public String visitCmdEnquanto (LAParser.CmdEnquantoContext ctx){
+        pilhaDeTabelas.empilhar(new TabelaDeSimbolos("enquanto"));
         visitExpressao(ctx.expressao());
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
+        pilhaDeTabelas.desempilhar();
         return "";
     }
     
     @Override
     public String visitCmdFaca (LAParser.CmdFacaContext ctx){
+        pilhaDeTabelas.empilhar(new TabelaDeSimbolos("faca"));
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
         visitExpressao(ctx.expressao());
+        pilhaDeTabelas.desempilhar();
         return "";
     }
     
     @Override
     public String visitCmdAtribuicao(LAParser.CmdAtribuicaoContext ctx){
         String tipoId = visitIdentificador(ctx.identificador());
+        if(tipoId.equals("")) tipoId = "tipo_invalido";
         String id_txt = ctx.identificador().getText();
         String id_txt_certo = id_txt + "";
         if(id_txt.indexOf('[') != -1) id_txt = id_txt.substring(0, id_txt.indexOf('['));
+        // variavel ponteiro atribuindo no conteudo apontado
         if(ctx.ponteiro != null){
             id_txt = "^" + id_txt;
+            id_txt_certo = "^" + id_txt_certo;
+            tipoId = tipoId.substring(1);
         }
+        // variavel ponteiro atribuindo um endereço
+        else if(tipoId.charAt(0) == '^'){
+            id_txt = "^" + id_txt;
+        }
+        
         String tipoExp = visitExpressao(ctx.expressao());
         if(!pilhaDeTabelas.existeSimbolo(id_txt)){
             Saida.println("Linha " + ctx.identificador().start.getLine() + ": identificador " + id_txt_certo + " nao declarado");
@@ -548,7 +563,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         if(ctx.opu1 != null){
             visitOp_unario(ctx.opu1);
         }
-        if(ctx.opu2 != null){
+        else if(ctx.opu2 != null){
             visitOp_unario(ctx.opu2);
         }        
         return "";

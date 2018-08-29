@@ -14,4 +14,8 @@ public class Saida {
     public static String getTexto() {
         return texto;
     }
+    
+    public static boolean isEmpty(){
+        return texto.isEmpty();
+    }
 }

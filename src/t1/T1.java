@@ -11,15 +11,20 @@ public class T1 {
     
     public static void main(String[] args) throws Exception {
         
+        boolean debug = false;
+        
+        if(!debug){
+        
         // Verifica os argumentos recebidos
         if(args.length != 2){
             System.out.println("Compilador LA");
             System.out.println("Devem ser passados 2 argumentos: o arquivo de entrada e o arquivo de saída");
             System.exit(0);
         }
+        
         String nomeArquivoEntrada = args[0];
         String nomeArquivoSaida = args[1];
-        
+                
         // Converte o arquivo de entrada para um input do ANTLR
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(nomeArquivoEntrada));
         
@@ -34,12 +39,18 @@ public class T1 {
         LAParser.ProgramaContext arvore = parser.programa();
         
         // Análise semântica
-        if(Saida.getTexto().isEmpty()){ // apenas se não houve erro na análise sintática
+        if(Saida.isEmpty()){ // apenas se não houve erro na análise sintática
             LAVisitorSemantico visitor = new LAVisitorSemantico();
-            visitor.visit(arvore);
+            visitor.visitPrograma(arvore);
         }
         
-        Saida.println("Fim da compilacao");
+        // Geração de código C
+        if(Saida.isEmpty()){ // apenas se não houve erro na análise semântica
+            Saida.println("Ola");
+        }
+        else{
+            Saida.println("Fim da compilacao");
+        }
         
         // Escreve a saída no arquivo de saída
         FileOutputStream arquivoSaida = new FileOutputStream(nomeArquivoSaida);
@@ -47,6 +58,42 @@ public class T1 {
         p.write(Saida.getTexto());
         p.close();
         arquivoSaida.close();
+        
+        }
+        else{
+            
+            String nomeArquivoEntrada = "C:\\Users\\otavi\\Desktop\\Compilers_2\\T1\\T1\\casosDeTesteT1\\3.arquivos_sem_erros\\1.entrada\\1.declaracao_leitura_impressao_inteiro.alg";
+
+            // Converte o arquivo de entrada para um input do ANTLR
+            ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(nomeArquivoEntrada));
+
+            // Análise léxica
+            LALexer lexer = new LALexer(input);
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+            // Análise sintática
+            LAParser parser = new LAParser(tokens);
+            LAErrorListener errorListener = new LAErrorListener();
+            parser.addErrorListener(errorListener);
+            LAParser.ProgramaContext arvore = parser.programa();
+
+            // Análise semântica
+            if(Saida.getTexto().isEmpty()){ // apenas se não houve erro na análise sintática
+                LAVisitorSemantico visitor = new LAVisitorSemantico();
+                visitor.visitPrograma(arvore);
+            }
+
+            // Geração de código C
+            if(Saida.getTexto().isEmpty()){
+                Saida.println("Código gerado");
+            }
+            else{
+                Saida.println("Fim da compilacao");
+            }
+
+            System.out.println(Saida.getTexto());
+            
+        }
         
     }
 }
