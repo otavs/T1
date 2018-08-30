@@ -4,12 +4,12 @@ public class LAListenerGerador extends LABaseListener{
     
     @Override
     public void enterPrograma(LAParser.ProgramaContext ctx){
-        System.out.println("A");
+        Saida.println("test");
     }
     
     @Override
     public void exitPrograma(LAParser.ProgramaContext ctx){
-        System.out.println("F");
+        Saida.println("OLA");
     }
     
     
