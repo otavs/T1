@@ -13,7 +13,7 @@ public class LAErrorListener implements ANTLRErrorListener{
     
     @Override
     public void syntaxError(Recognizer<?, ?> rcgnzr, Object o, int i, int i1, String string, RecognitionException re) {
-        if(Saida.getTexto() == "" && o instanceof Token){
+        if(Saida.isEmpty() && o instanceof Token){
             Token token = (Token)o;
             String texto = token.getText();
             if(token.getType() == LALexer.CARACTERE_ERRADO){
