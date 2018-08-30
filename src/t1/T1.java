@@ -12,7 +12,7 @@ public class T1 {
     
     public static void main(String[] args) throws Exception {
         
-        boolean debug = true;
+        boolean debug = false;
         
         if(!debug){
         
@@ -41,15 +41,14 @@ public class T1 {
         
         // Análise semântica
         if(Saida.isEmpty()){ // apenas se não houve erro na análise sintática
-            LAVisitorSemantico visitor = new LAVisitorSemantico();
-            visitor.visitPrograma(arvore);
+            LAVisitorSemantico visitorSemantico = new LAVisitorSemantico();
+            visitorSemantico.visitPrograma(arvore);
         }
         
         // Geração de código C
         if(Saida.isEmpty()){ // apenas se não houve erro na análise semântica
-            LAListenerGerador listener = new LAListenerGerador();
-            ParseTreeWalker walker = new ParseTreeWalker();
-            walker.walk(listener, arvore);
+            LAVisitorGerador visitorGerador = new LAVisitorGerador();
+            visitorGerador.visitPrograma(arvore);
         }
         else{
             Saida.println("Fim da compilacao");
@@ -90,9 +89,8 @@ public class T1 {
 
             // Geração de código C
             if(Saida.getTexto().isEmpty()){
-                LAListenerGerador listener = new LAListenerGerador();
-                ParseTreeWalker walker = new ParseTreeWalker();
-                walker.walk(listener, arvore);
+                LAVisitorGerador visitorGerador = new LAVisitorGerador();
+                visitorGerador.visitPrograma(arvore);
             }
             else{
                 Saida.println("Fim da compilacao");
