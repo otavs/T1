@@ -12,7 +12,7 @@ public class T1 {
     
     public static void main(String[] args) throws Exception {
         
-        boolean debug = false;
+        boolean debug = true;
         
         if(!debug){
         

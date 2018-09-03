@@ -7,6 +7,10 @@ public class Saida {
         texto += txt + "\n";
     }
     
+    public static void print(String txt){
+        texto += txt;
+    }
+    
     public static void clear() {
         texto = "";
     }
