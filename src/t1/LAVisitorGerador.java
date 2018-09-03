@@ -4,9 +4,70 @@ import org.antlr.v4.runtime.Token;
 
 public class LAVisitorGerador{
     
+    PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
+    
+    public boolean isNumerico(String tipo){
+        if(tipo.equals("inteiro") || tipo.equals("real")){
+            return true;
+        }
+        return false;
+    }
+    
+    public String tipoRetorno(String operacao, String op1, String op2){
+        if(operacao.equals("aritmetica")){
+            if(isNumerico(op1) && isNumerico(op2)){
+                if(op1.equals("real") || op2.equals("real")) return "real";
+                else return "inteiro";
+            }
+            else if(op1.equals("literal") && op2.equals("literal")){
+                return "literal";
+            }
+            else{
+                return "tipo_invalido";
+            }
+        }
+        else if(operacao.equals("relacional")){
+            if(isNumerico(op1) && isNumerico(op2)){
+                return "logico";
+            }
+            else{
+                return "tipo_invalido";
+            }
+        }
+        else if(operacao.equals("logica")){
+            if(op1.equals("logico") && op2.equals("logico")){
+                return "logico";
+            }
+            else{
+                return "tipo_invalido";
+            }
+        }
+        return "";
+    }
+    
+    public String parseTipo(String tipo){
+        if(tipo.equals("inteiro") || tipo.equals("logico")) return "int";
+        if(tipo.equals("real")) return "float";
+        if(tipo.equals("literal")) return "char[60]";
+        return tipo;
+    }
+    
+    public String parseTipoFormat(String tipo){
+        if(tipo.equals("inteiro") || tipo.equals("logico")) return "%d";
+        if(tipo.equals("real")) return "%f";
+        if(tipo.equals("literal")) return "%s";
+        return tipo;
+    }
+    
     public void visitPrograma(LAParser.ProgramaContext ctx){
+        pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));
+        Saida.println("#include <stdio.h>");
+        Saida.println("#include <stdlib.h>");
         visitDeclaracoes(ctx.declaracoes());
+        Saida.println("int main(){");
         visitCorpo(ctx.corpo());
+        Saida.println("return 0;");
+        Saida.println("}");
     }
     
     public void visitDeclaracoes(LAParser.DeclaracoesContext ctx){
@@ -26,7 +87,15 @@ public class LAVisitorGerador{
     
     public void visitDecl_local(LAParser.Decl_localContext ctx){
         if(ctx.variavel() != null){
+            Saida.print(parseTipo(ctx.variavel().tipo().getText()) + " ");
+            Saida.print(ctx.variavel().id.getText());
+            pilhaDeTabelas.topo().adicionarSimbolo(ctx.variavel().id.getText(), "variavel", ctx.variavel().tipo().getText());
+            for(LAParser.IdentificadorContext id : ctx.variavel().outrosIds){
+                Saida.print(", " + id.getText());
+                pilhaDeTabelas.topo().adicionarSimbolo(id.getText(), "variavel", ctx.variavel().tipo().getText());
+            }
             visitVariavel(ctx.variavel());
+            Saida.println(";");
         }
         else if(ctx.id1 != null){
             // id1
@@ -47,12 +116,13 @@ public class LAVisitorGerador{
         visitTipo(ctx.tipo());
     }
     
-    public void visitIdentificador(LAParser.IdentificadorContext ctx) {
-        // id
+    public String visitIdentificador(LAParser.IdentificadorContext ctx) {
+        String nome = ctx.id.getText();
         for(Token id : ctx.outrosIds){
-            // id
+            nome += "." + id.getText();
         }
         visitDimensao(ctx.dimensao());
+        return pilhaDeTabelas.tipoDeDadoDoSimbolo(nome);
     }
     
     public void visitDimensao(LAParser.DimensaoContext ctx){
@@ -176,17 +246,35 @@ public class LAVisitorGerador{
     }
     
     public void visitCmdLeia(LAParser.CmdLeiaContext ctx){
-        visitIdentificador(ctx.id1);
+        String tipo = visitIdentificador(ctx.id1);
+        Saida.print("scanf(\"");
+        Saida.print(parseTipoFormat(tipo));
         for(LAParser.IdentificadorContext id : ctx.id2){
-            visitIdentificador(id);
+            tipo = visitIdentificador(id);
+            Saida.print(parseTipoFormat(", " + tipo));
         }
+        Saida.print("\", ");
+        Saida.print("&" + ctx.id1.getText());
+        for(LAParser.IdentificadorContext id : ctx.id2){
+            Saida.print("&" + id.getText());
+        }
+        Saida.println(");");
     }
     
     public void visitCmdEscreva(LAParser.CmdEscrevaContext ctx){
-        visitExpressao(ctx.exp1);
+        String tipo = visitExpressao(ctx.exp1);
+        Saida.print("printf(\"");
+        Saida.print(parseTipoFormat(tipo));
         for(LAParser.ExpressaoContext exp : ctx.exp2){
-            visitExpressao(exp);
+            tipo = visitExpressao(exp);
+            Saida.print(parseTipoFormat(", " + tipo));
         }
+        Saida.print("\", ");
+        Saida.print(ctx.exp1.getText());
+        for(LAParser.ExpressaoContext id : ctx.exp2){
+            Saida.print(id.getText());
+        }
+        Saida.println(");");
     }
     
     public void visitCmdSe(LAParser.CmdSeContext ctx){
@@ -284,110 +372,117 @@ public class LAVisitorGerador{
         }
     }
     
-    public void visitExp_aritmetica(LAParser.Exp_aritmeticaContext ctx){
-        visitTermo(ctx.t1);
+    public String visitExp_aritmetica(LAParser.Exp_aritmeticaContext ctx){
+        String tipo = visitTermo(ctx.t1);
         for(LAParser.TermoContext t : ctx.t2){
-            // op1
-            visitTermo(t);
+            String tipoTermo = visitTermo(t);
+            tipo = tipoRetorno("aritmetica", tipo, tipoTermo);
         }       
+        return tipo;      
     }
     
-    public void visitTermo(LAParser.TermoContext ctx){
-        visitFator(ctx.f1);
+    public String visitTermo(LAParser.TermoContext ctx){
+        String tipo = visitFator(ctx.f1);
         for(LAParser.FatorContext f : ctx.f2){
-            // op2
-            visitFator(f);
+            String tipoFator = visitFator(f);
+            tipo = tipoRetorno("aritmetica", tipo, tipoFator);
         }       
+        return tipo;      
     }
     
-    public void visitFator(LAParser.FatorContext ctx){
-        visitParcela(ctx.p1);
+    public String visitFator(LAParser.FatorContext ctx){
+        String tipo = visitParcela(ctx.p1);
         for(LAParser.ParcelaContext p : ctx.p2){
-            // op3
-            visitParcela(p);
+            String tipoParcela = visitParcela(p);
+            tipo = tipoRetorno("aritmetica", tipo, tipoParcela);
         }       
-        
+        return tipo;
     }
 
-    public void visitParcela (LAParser.ParcelaContext ctx){
+    public String visitParcela (LAParser.ParcelaContext ctx){
         if(ctx.parcela_unario() != null){
-            // op_unario
-            visitParcela_unario(ctx.parcela_unario());
+            String tipo = visitParcela_unario(ctx.parcela_unario());
+            return tipo;
         }
         else{
-            visitParcela_nao_unario(ctx.parcela_nao_unario());
+            return visitParcela_nao_unario(ctx.parcela_nao_unario());
         }
     }
     
-    public void visitParcela_unario (LAParser.Parcela_unarioContext ctx){
+    public String visitParcela_unario (LAParser.Parcela_unarioContext ctx){
         if(ctx.identificador() != null) {
-            visitIdentificador(ctx.identificador());
+            String tipo = visitIdentificador(ctx.identificador());
+            return tipo;
         }
         else if(ctx.IDENT() != null){
-            // IDENT
-            visitExpressao(ctx.e1);         
-            for(LAParser.ExpressaoContext e : ctx.e2){
-                visitExpressao(e);
-            }
+            String id_txt = ctx.IDENT().getText();
+            return pilhaDeTabelas.tipoDeDadoDoSimbolo(id_txt);
         }
         else if(ctx.NUM_INT() != null){
-            // NUM_INT
+            return "inteiro";
         }
         else if(ctx.NUM_REAL() != null){
-            // NUM_REAL
+            return "real";
         }
         else{
-            visitExpressao(ctx.e3);
+            return visitExpressao(ctx.e3);
         }
     }
     
-    public void visitParcela_nao_unario (LAParser.Parcela_nao_unarioContext ctx){
+    public String visitParcela_nao_unario (LAParser.Parcela_nao_unarioContext ctx){
         if(ctx.identificador() != null){
-            // '&'
-            visitIdentificador(ctx.identificador());
+            String tipo = visitIdentificador(ctx.identificador());
+            String id_txt = ctx.identificador().getText();
+            return "&" + tipo;
         }
         else{
-            // CADEIA
+            return "literal";
         }
     }
     
-    public void visitExp_relacional (LAParser.Exp_relacionalContext ctx){
-        visitExp_aritmetica(ctx.e1);
+    public String visitExp_relacional (LAParser.Exp_relacionalContext ctx){
+        String tipo = visitExp_aritmetica(ctx.e1);
         if(ctx.op_relacional() != null){
-            // op_relacional
-            visitExp_aritmetica(ctx.e2);
+            String tipoExp = visitExp_aritmetica(ctx.e2);
+            tipo = tipoRetorno("relacional", tipo, tipoExp);
         }
+        return tipo;
     }
 
-    public void visitExpressao(LAParser.ExpressaoContext ctx){
-        visitTermo_logico(ctx.t1);
-        for(LAParser.Termo_logicoContext t : ctx.t2){
-            // op_logico1
-            visitTermo_logico(t);
+    public String visitExpressao(LAParser.ExpressaoContext ctx){
+        String tipo = visitTermo_logico(ctx.t1);
+        for(LAParser.Termo_logicoContext tl : ctx.t2){
+            String tipoTermo = visitTermo_logico(tl);
+            tipo = tipoRetorno("logica", tipo, tipoTermo);
         }
+        return tipo;
     }
     
-    public void visitTermo_logico(LAParser.Termo_logicoContext ctx){
-        visitFator_logico(ctx.f1);
-        for(LAParser.Fator_logicoContext f : ctx.f2){
-            // op_logico2
-            visitFator_logico(f);
+    public String visitTermo_logico(LAParser.Termo_logicoContext ctx){
+        String tipo = visitFator_logico(ctx.f1);
+        for(LAParser.Fator_logicoContext fl : ctx.f2){
+            String tipoFator = visitFator_logico(fl);
+            tipo = tipoRetorno("logica", tipo, tipoFator);
         } 
+        return tipo;
     }
     
-    public void visitFator_logico(LAParser.Fator_logicoContext ctx){
-        if(ctx.nao != null){
-            // 'nao'
-        }
-        visitParcela_logica(ctx.parcela_logica());
-    }
-    
-    public void visitParcela_logica(LAParser.Parcela_logicaContext ctx){
-        if(ctx.exp_relacional() != null){
-            visitExp_relacional(ctx.exp_relacional());
+    public String visitFator_logico(LAParser.Fator_logicoContext ctx){
+        String tipo = visitParcela_logica(ctx.parcela_logica());
+        if(ctx.nao != null && !tipo.equals("logico")){
+            return "tipo_invalido";
         }
         else{
-            // 'verdadeiro' / 'falso'
+            return tipo;
+        }
+    }
+    
+    public String visitParcela_logica(LAParser.Parcela_logicaContext ctx){
+        if(ctx.exp_relacional() != null){
+            return visitExp_relacional(ctx.exp_relacional());
+        }
+        else{
+            return "logico";
         }
     }
 }
