@@ -1,10 +1,14 @@
 package t1;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Pair;
 
 public class LAVisitorGerador{
     
     PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
+    HashMap<String, ArrayList<Pair<String, String>>> mapRegistros = new HashMap<String, ArrayList<Pair<String, String>>>();
     
     public boolean isNumerico(String tipo){
         if(tipo.equals("inteiro") || tipo.equals("real")){
@@ -46,9 +50,10 @@ public class LAVisitorGerador{
     }
     
     public String parseTipo(String tipo){
+        if(tipo.charAt(0) == '^') tipo = tipo.substring(1);
         if(tipo.equals("inteiro") || tipo.equals("logico")) return "int";
         if(tipo.equals("real")) return "float";
-        if(tipo.equals("literal")) return "char[60]";
+        if(tipo.equals("literal")) return "char";
         return tipo;
     }
     
@@ -59,10 +64,38 @@ public class LAVisitorGerador{
         return tipo;
     }
     
+    public String parseExpressao(LAParser.ExpressaoContext ctx){
+        String ret = parseTermo_logico(ctx.t1);
+        for(LAParser.Termo_logicoContext termo : ctx.t2){
+            ret += "||";
+            ret += parseTermo_logico(termo);
+        }
+        return ret.replaceAll("=", "==").replaceAll("<>", "!=").replaceAll(">==", ">=").replaceAll("<==", "<=");
+    }
+    
+    public String parseTermo_logico(LAParser.Termo_logicoContext ctx){
+        String ret = parseFator_logico(ctx.f1);
+        for(LAParser.Fator_logicoContext fl : ctx.f2){
+            ret += "&&";
+            ret += parseFator_logico(fl);
+        } 
+        return ret;
+    }
+    
+    public String parseFator_logico(LAParser.Fator_logicoContext ctx){
+        if(ctx.nao != null){
+            return "!" + ctx.parcela_logica().getText();
+        }
+        else{
+            return ctx.parcela_logica().getText();
+        }
+    }
+    
     public void visitPrograma(LAParser.ProgramaContext ctx){
         pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));
         Saida.println("#include <stdio.h>");
         Saida.println("#include <stdlib.h>");
+        Saida.println("#include <string.h>");
         visitDeclaracoes(ctx.declaracoes());
         Saida.println("int main(){");
         visitCorpo(ctx.corpo());
@@ -87,33 +120,92 @@ public class LAVisitorGerador{
     
     public void visitDecl_local(LAParser.Decl_localContext ctx){
         if(ctx.variavel() != null){
-            Saida.print(parseTipo(ctx.variavel().tipo().getText()) + " ");
-            Saida.print(ctx.variavel().id.getText());
-            pilhaDeTabelas.topo().adicionarSimbolo(ctx.variavel().id.getText(), "variavel", ctx.variavel().tipo().getText());
-            for(LAParser.IdentificadorContext id : ctx.variavel().outrosIds){
-                Saida.print(", " + id.getText());
-                pilhaDeTabelas.topo().adicionarSimbolo(id.getText(), "variavel", ctx.variavel().tipo().getText());
+            // variavel normal
+            if(ctx.variavel().tipo().getText().indexOf("registro") == -1){
+                boolean ponteiro = ctx.variavel().tipo().getText().charAt(0) == '^';
+                String tipo = ctx.variavel().tipo().getText();
+                String nome = ctx.variavel().id.getText();
+                Saida.print(parseTipo(tipo) + " ");
+                if(ponteiro) Saida.print("*");
+                Saida.print(nome);
+                boolean isString = tipo.equals("literal");
+                if(isString) Saida.print("[1000]");
+                if(nome.indexOf("[") != -1) nome = nome.substring(0, nome.indexOf("["));
+                pilhaDeTabelas.topo().adicionarSimbolo(nome, "variavel", tipo);
+                for(LAParser.IdentificadorContext id : ctx.variavel().outrosIds){
+                    nome = id.getText();
+                    if(ponteiro) Saida.print("*");
+                    Saida.print(", " + nome);
+                    if(isString) Saida.print("[1000]");
+                    if(nome.indexOf("[") != -1) nome = nome.substring(0, nome.indexOf("["));
+                    pilhaDeTabelas.topo().adicionarSimbolo(nome, "variavel", tipo);
+                }
+                Saida.println(";");
+                if(mapRegistros.containsKey(ctx.variavel().tipo().getText())){
+                    for(Pair<String, String> p : mapRegistros.get(ctx.variavel().tipo().getText())){
+                        pilhaDeTabelas.topo().adicionarSimbolo(ctx.variavel().id.getText() + "." + p.a, "variavel", p.b);
+                        for(LAParser.IdentificadorContext id : ctx.variavel().outrosIds){
+                            pilhaDeTabelas.topo().adicionarSimbolo(id.getText() + "." + p.a, "variavel", p.b);
+                        }
+                    }
+                }
             }
-            visitVariavel(ctx.variavel());
-            Saida.println(";");
+            // registro
+            else{
+                Saida.println("struct {");
+                ArrayList<Pair<String, String>> varList = new ArrayList<Pair<String, String>>();
+                for(LAParser.VariavelContext var : ctx.variavel().tipo().registro().variavel()){
+                    String tipo = var.tipo().getText();
+                    Saida.print(parseTipo(tipo) + " ");
+                    Saida.print(var.id.getText());
+                    boolean isString = tipo.equals("literal");
+                    if(isString) Saida.print("[1000]");
+                    varList.add(new Pair<String, String>(var.id.getText(), tipo));
+                    for(LAParser.IdentificadorContext id : var.outrosIds){
+                        Saida.print(", " + id.getText());
+                        if(isString) Saida.print("[1000]");
+                        varList.add(new Pair<String, String>(id.getText(), tipo));
+                    }
+                    Saida.println(";");
+                }
+                Saida.print("} " + ctx.variavel().id.getText());
+                for(Pair<String, String> p : varList){
+                     pilhaDeTabelas.topo().adicionarSimbolo(ctx.variavel().id.getText() + "." + p.a, "variavel", p.b);
+                }
+                for(LAParser.IdentificadorContext id : ctx.variavel().outrosIds){
+                    Saida.print(", " + id.getText());
+                    for(Pair<String, String> p : varList){
+                        pilhaDeTabelas.topo().adicionarSimbolo(ctx.variavel().id.getText() + "." + p.a, "variavel", p.b);
+                    }
+                }
+                Saida.println(";");
+            }
         }
         else if(ctx.id1 != null){
-            // id1
-            visitTipo_basico(ctx.tipo_basico());
+            Saida.println("#define " + ctx.id1.getText() + " " + ctx.valor_constante().getText());
         }
         else{
-            // id2
-            visitTipo(ctx.tipo());
+            if(ctx.tipo().registro() != null){
+                Saida.println("typedef struct {");
+                String nome = ctx.id2.getText();
+                mapRegistros.put(nome, new ArrayList<Pair<String, String>>());
+                for(LAParser.VariavelContext var : ctx.tipo().registro().variavel()){
+                    String tipo = var.tipo().getText();
+                    mapRegistros.get(nome).add(new Pair<String, String>(var.id.getText(), tipo));
+                    Saida.print(parseTipo(tipo) + " ");
+                    Saida.print(var.id.getText());
+                    boolean isString = tipo.equals("literal");
+                    if(isString) Saida.print("[1000]");
+                    for(LAParser.IdentificadorContext id : var.outrosIds){
+                        mapRegistros.get(nome).add(new Pair<String, String>(id.getText(), tipo));
+                        Saida.print(", " + id.getText());
+                        if(isString) Saida.print("[1000]");
+                    }
+                    Saida.println(";");
+                }
+                Saida.println("} " + nome + ";");
+            }
         }
-        
-    }
-    
-    public void visitVariavel(LAParser.VariavelContext ctx){
-        visitIdentificador(ctx.id);
-        for(LAParser.IdentificadorContext id : ctx.outrosIds){
-            visitIdentificador(id);
-        }
-        visitTipo(ctx.tipo());
     }
     
     public String visitIdentificador(LAParser.IdentificadorContext ctx) {
@@ -121,94 +213,98 @@ public class LAVisitorGerador{
         for(Token id : ctx.outrosIds){
             nome += "." + id.getText();
         }
-        visitDimensao(ctx.dimensao());
         return pilhaDeTabelas.tipoDeDadoDoSimbolo(nome);
-    }
-    
-    public void visitDimensao(LAParser.DimensaoContext ctx){
-        for(LAParser.Exp_aritmeticaContext exp : ctx.exp_aritmetica()){
-            visitExp_aritmetica(exp);
-        }
-    }
-    
-    public void visitTipo(LAParser.TipoContext ctx){
-        if(ctx.registro() != null){
-            visitRegistro(ctx.registro());
-        }
-        else{
-            visitTipo_estendido(ctx.tipo_estendido());
-        }
-    }
-    
-    public void visitTipo_basico(LAParser.Tipo_basicoContext ctx){
-        // int, double...
-    }
-    
-    public void visitTipo_basico_ident(LAParser.Tipo_basico_identContext ctx){
-        if(ctx.tipo_basico() != null){
-            visitTipo_basico(ctx.tipo_basico());
-        }
-        else{
-            // IDENT
-        }
-    }
-    
-    public void visitTipo_estendido(LAParser.Tipo_estendidoContext ctx){
-        visitTipo_basico_ident(ctx.tipo_basico_ident());
-    }
-    
-    public void visitValor_constante(LAParser.Valor_constanteContext ctx){
-        
-    }
-    
-    public void visitRegistro(LAParser.RegistroContext ctx){
-        for(LAParser.VariavelContext var : ctx.variavel()){    
-            visitVariavel(var);
-        }
     }
     
     public void visitDecl_global(LAParser.Decl_globalContext ctx){
         // Procedimento
         if(ctx.ident1 != null){
-            // ident1
+            Saida.print("void " + ctx.ident1.getText() + "(");
             if(ctx.params1 != null){
-                visitParametros(ctx.params1);
+                String tipo = ctx.params1.param1.tipo_estendido().getText();
+                String nome = ctx.params1.param1.id1.getText();
+                Saida.print(parseTipo(tipo) + " ");
+                boolean isString = tipo.equals("literal");
+                if(isString) Saida.print("*");
+                Saida.print(nome);
+                pilhaDeTabelas.topo().adicionarSimbolo(nome, "variavel", tipo);
+                for(LAParser.IdentificadorContext id : ctx.params1.param1.id2){
+                    Saida.print(", ");
+                    nome = id.getText();
+                    Saida.print(parseTipo(tipo) + " ");
+                    Saida.print(nome);
+                    if(isString) Saida.print("*");
+                    pilhaDeTabelas.topo().adicionarSimbolo(nome, "variavel", tipo);
+                }
+                for(LAParser.ParametroContext param : ctx.params1.param2){
+                    tipo = param.tipo_estendido().getText();
+                    nome = param.id1.getText();
+                    Saida.print(parseTipo(tipo) + " ");
+                    Saida.print(nome);
+                    isString = tipo.equals("literal");
+                    if(isString) Saida.print("*");
+                    pilhaDeTabelas.topo().adicionarSimbolo(nome, "variavel", tipo);
+                    for(LAParser.IdentificadorContext id : param.id2){
+                        Saida.print(", ");
+                        nome = id.getText();
+                        Saida.print(parseTipo(tipo) + " ");
+                        Saida.print(nome);
+                        if(isString) Saida.print("*");
+                        pilhaDeTabelas.topo().adicionarSimbolo(nome, "variavel", tipo);
+                    }
+                }
             }
-            for(LAParser.Decl_localContext decl : ctx.decl1){
+            Saida.println("){");
+            for(LAParser.Decl_localContext decl : ctx.decl1)
                 visitDecl_local(decl);
-            }
-            for(LAParser.CmdContext cmd : ctx.c1){
+            for(LAParser.CmdContext cmd : ctx.c1)
                 visitCmd(cmd);
-            }
+            Saida.println("}");
         }
         // Função
         else{
-            // ident2
+            pilhaDeTabelas.topo().adicionarSimbolo(ctx.ident2.getText(), "funcao", ctx.tipo_estendido().getText());
+            Saida.print(parseTipo(ctx.tipo_estendido().getText()) + " " + ctx.ident2.getText() + "(");
             if(ctx.params2 != null){
-                visitParametros(ctx.params2);
+                String tipo = ctx.params2.param1.tipo_estendido().getText();
+                String nome = ctx.params2.param1.id1.getText();
+                Saida.print(parseTipo(tipo) + " ");
+                boolean isString = tipo.equals("literal");
+                if(isString) Saida.print("*");
+                Saida.print(nome);
+                pilhaDeTabelas.topo().adicionarSimbolo(nome, "variavel", tipo);
+                for(LAParser.IdentificadorContext id : ctx.params2.param1.id2){
+                    Saida.print(", ");
+                    nome = id.getText();
+                    Saida.print(parseTipo(tipo) + " ");
+                    Saida.print(nome);
+                    if(isString) Saida.print("*");
+                    pilhaDeTabelas.topo().adicionarSimbolo(nome, "variavel", tipo);
+                }
+                for(LAParser.ParametroContext param : ctx.params2.param2){
+                    tipo = param.tipo_estendido().getText();
+                    nome = param.id1.getText();
+                    Saida.print(parseTipo(tipo) + " ");
+                    Saida.print(nome);
+                    isString = tipo.equals("literal");
+                    if(isString) Saida.print("*");
+                    pilhaDeTabelas.topo().adicionarSimbolo(nome, "variavel", tipo);
+                    for(LAParser.IdentificadorContext id : param.id2){
+                        Saida.print(", ");
+                        nome = id.getText();
+                        Saida.print(parseTipo(tipo) + " ");
+                        Saida.print(nome);
+                        if(isString) Saida.print("*");
+                        pilhaDeTabelas.topo().adicionarSimbolo(nome, "variavel", tipo);
+                    }
+                }
             }
-            visitTipo_estendido(ctx.tipo_estendido());
-            for(LAParser.Decl_localContext decl : ctx.decl2){
+            Saida.println("){");
+            for(LAParser.Decl_localContext decl : ctx.decl2)
                 visitDecl_local(decl);
-            }
-            for(LAParser.CmdContext cmd : ctx.c2){
+            for(LAParser.CmdContext cmd : ctx.c2)
                 visitCmd(cmd);
-            }
-        }
-    }
-    
-    public void visitParametro(LAParser.ParametroContext ctx){
-        // id1
-        for(LAParser.IdentificadorContext id : ctx.id2){
-            // id
-        }
-        visitTipo_estendido(ctx.tipo_estendido());
-    }
-    
-    public void visitParametros(LAParser.ParametrosContext ctx){
-        visitParametro(ctx.param1);
-        for(LAParser.ParametroContext param : ctx.param2){
-            visitParametro(param);
+            Saida.println("}");
         }
     }
     
@@ -267,109 +363,99 @@ public class LAVisitorGerador{
         Saida.print(parseTipoFormat(tipo));
         for(LAParser.ExpressaoContext exp : ctx.exp2){
             tipo = visitExpressao(exp);
-            Saida.print(parseTipoFormat(", " + tipo));
+            Saida.print(parseTipoFormat(tipo));
         }
         Saida.print("\", ");
-        Saida.print(ctx.exp1.getText());
+        Saida.print(parseExpressao(ctx.exp1));
         for(LAParser.ExpressaoContext id : ctx.exp2){
-            Saida.print(id.getText());
+            Saida.print(", " + parseExpressao(id));
         }
         Saida.println(");");
     }
     
     public void visitCmdSe(LAParser.CmdSeContext ctx){
-        visitExpressao(ctx.e1);
+        Saida.println("if(" + parseExpressao(ctx.e1) + "){");
         for(LAParser.CmdContext cmd : ctx.c1){
             visitCmd(cmd);
         }
-        if(ctx.c2 != null) {
+        Saida.println("}");
+        if(!ctx.c2.isEmpty()) {
+            Saida.println("else{");
             for(LAParser.CmdContext cmd : ctx.c2){
                 visitCmd(cmd);
             }
+            Saida.println("}");
         }
     }
     
     public void visitCmdCaso (LAParser.CmdCasoContext ctx){
-        visitExp_aritmetica(ctx.exp_aritmetica());
-        visitSelecao(ctx.selecao());
+        Saida.println("switch(" + ctx.exp_aritmetica().getText() + "){");
+        for(LAParser.Item_selecaoContext item : ctx.selecao().item_selecao()){
+            int a = Integer.parseInt(item.constantes().ni1.ni1.getText());
+            int b = a;
+            if(item.constantes().ni1.ni2 != null)
+                b = Integer.parseInt(item.constantes().ni1.ni2.getText());
+            while(a <= b) Saida.println("case " + a++ + ": ");
+            for(LAParser.CmdContext cmd : item.cmd()){
+                visitCmd(cmd);
+            }
+            Saida.println("break;");
+        }
         if(ctx.cmd() != null){
+            Saida.println("default:");
             for(LAParser.CmdContext cmd : ctx.cmd()){
                 visitCmd(cmd);
-            }   
+            }
         }
+        Saida.println("}");
     }
     
     public void visitCmdPara (LAParser.CmdParaContext ctx){
-        visitExp_aritmetica(ctx.ea1);
-        visitExp_aritmetica(ctx.ea2);
+        String id = ctx.IDENT().getText();
+        Saida.println("for(" + id + " = " + ctx.ea1.getText() + "; " + id + " <= " + ctx.ea2.getText() + "; " + id + "++){");
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
-        }    
+        }
+        Saida.println("}");
     }
     
     public void visitCmdEnquanto (LAParser.CmdEnquantoContext ctx){
-        visitExpressao(ctx.expressao());
+        Saida.println("while(" + parseExpressao(ctx.expressao()) + "){");
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
+        Saida.println("}");
     }
     
     public void visitCmdFaca (LAParser.CmdFacaContext ctx){
+        Saida.println("do{");
         for(LAParser.CmdContext cmd : ctx.cmd()){
             visitCmd(cmd);
         }
-        visitExpressao(ctx.expressao());
+        Saida.println("} while(" + parseExpressao(ctx.expressao()) + ");");
     }
     
     public void visitCmdAtribuicao(LAParser.CmdAtribuicaoContext ctx){
-        // ponteiro
-        visitIdentificador(ctx.identificador());
-        visitExpressao(ctx.expressao());
+        String tipo = visitExpressao(ctx.expressao());
+        if(tipo.equals("literal")){
+            Saida.println("strcpy(" + ctx.identificador().getText() + ", " + ctx.expressao().getText() + ");");
+        }
+        else{
+            if(ctx.ponteiro != null) Saida.print("*");
+            Saida.println(ctx.identificador().getText() + " = " + ctx.expressao().getText() + ";");
+        }     
     }
     
     public void visitCmdChamada(LAParser.CmdChamadaContext ctx){
-        // IDENT
-        visitExpressao(ctx.exp);
+        Saida.print(ctx.IDENT() + "(" + parseExpressao(ctx.exp));
         for(LAParser.ExpressaoContext exp : ctx.outrasExp){
-            visitExpressao(exp);
+            Saida.print(", " + parseExpressao(exp));
         }
+        Saida.println(");");
     }
     
     public void visitCmdRetorne(LAParser.CmdRetorneContext ctx){
-        visitExpressao(ctx.expressao());
-    }
-    
-    public void visitSelecao(LAParser.SelecaoContext ctx){
-        for(LAParser.Item_selecaoContext item : ctx.item_selecao()){
-            visitItem_selecao(item);
-        }
-    }
-    
-    public void visitItem_selecao(LAParser.Item_selecaoContext ctx){
-        visitConstantes(ctx.constantes());
-        for(LAParser.CmdContext cmd : ctx.cmd()){
-            visitCmd(cmd);
-        }
-    }
-    
-    public void visitConstantes(LAParser.ConstantesContext ctx){
-        visitNumero_intervalo(ctx.ni1);
-        for(LAParser.Numero_intervaloContext ni : ctx.ni2){
-            visitNumero_intervalo(ni);
-        }
-    }
-    
-    public void visitNumero_intervalo(LAParser.Numero_intervaloContext ctx){
-        if(ctx.opu1 != null){
-            // opu1
-        }
-        // ni1
-        if(ctx.ni2 != null){
-            if(ctx.opu2 != null){
-                // opu2
-            }
-            // ni2
-        }
+        Saida.println("return " + parseExpressao(ctx.expressao()) + ";");
     }
     
     public String visitExp_aritmetica(LAParser.Exp_aritmeticaContext ctx){

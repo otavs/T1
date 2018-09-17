@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-int main() {
-	int x;
-	scanf("%d",&x);
-	printf("%d",x);
-	return 0;
+#include <string.h>
+int main(){
+float x, y;
+scanf("%f", &x);
+scanf("%f", &y);
+printf("%f", x+y);
+return 0;
 }

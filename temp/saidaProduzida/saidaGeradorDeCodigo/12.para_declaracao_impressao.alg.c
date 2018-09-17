@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-int main() {
-	int x;
-	scanf("%d",&x);
-	printf("%d",x);
-	return 0;
+#include <string.h>
+int main(){
+int i;
+for(i = 1; i <= 5; i++){
+printf("%d%s", i, "\n");
+}
+return 0;
 }

@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-int main() {
-	int x;
-	scanf("%d",&x);
-	printf("%d",x);
-	return 0;
+#include <string.h>
+int main(){
+int i;
+i = 1;
+while(i<=5){
+printf("%d%s", i, "\n");
+i = i+1;
+}
+return 0;
 }

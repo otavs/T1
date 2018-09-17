@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-int main() {
-	int x;
-	scanf("%d",&x);
-	printf("%d",x);
-	return 0;
+#include <string.h>
+int dobro(int x){
+return 2*x;
+}
+int main(){
+printf("%d", dobro(4));
+return 0;
 }
