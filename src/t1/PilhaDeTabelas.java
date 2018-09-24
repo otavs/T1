@@ -3,6 +3,7 @@ package t1;
 import java.util.LinkedList;
 import java.util.List;
 
+// A pilha de tabelas é a pilha de escopos, com cada tabela representando um escopo
 public class PilhaDeTabelas {
     private LinkedList<TabelaDeSimbolos> pilha;
 

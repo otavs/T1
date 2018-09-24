@@ -5,11 +5,18 @@ import java.util.HashMap;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Pair;
 
+// Visitor utilizado para a geração do código C
+// Recebe a árvore sintática gerada pelo parser e percorre os seus nós convertendo os textos para o formato da linguagem C
+// Ele assume que a árvore foi gerada corretamente, portanto deve ser chamado apenas se não houve nenhum erro léxico ou sintático
+// Nem todos os nós são visitados, pois em alguns casos é possível pegar todo o texto de um nó e converter para C, sem precisar visitar seus filhos
 public class LAVisitorGerador{
     
+    // A tabela de símbolos e o map dos registros são utilizados novamente, para armazenar as variáveis com seus respectivos tipos em seus respectivos escopos
+    // Isso é necessário pois para utilizar as funções printf e scanf é preciso saber o tipo dos dados que serão lidos ou escritos 
     PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
     HashMap<String, ArrayList<Pair<String, String>>> mapRegistros = new HashMap<String, ArrayList<Pair<String, String>>>();
     
+    // Função auxiliar para verificar se um tipo é numérico
     public boolean isNumerico(String tipo){
         if(tipo.equals("inteiro") || tipo.equals("real")){
             return true;
@@ -17,6 +24,7 @@ public class LAVisitorGerador{
         return false;
     }
     
+    // Função auxiliar para verificar o tipo de retorno de uma operação binária
     public String tipoRetorno(String operacao, String op1, String op2){
         if(operacao.equals("aritmetica")){
             if(isNumerico(op1) && isNumerico(op2)){
@@ -49,6 +57,7 @@ public class LAVisitorGerador{
         return "";
     }
     
+    // Função auxiliar para converter um tipo de LA para C
     public String parseTipo(String tipo){
         if(tipo.charAt(0) == '^') tipo = tipo.substring(1);
         if(tipo.equals("inteiro") || tipo.equals("logico")) return "int";
@@ -57,6 +66,7 @@ public class LAVisitorGerador{
         return tipo;
     }
     
+    // Função auxiliar para converter um tipo de LA para a formatação das funções printf e scanf
     public String parseTipoFormat(String tipo){
         if(tipo.equals("inteiro") || tipo.equals("logico")) return "%d";
         if(tipo.equals("real")) return "%f";
@@ -64,6 +74,8 @@ public class LAVisitorGerador{
         return tipo;
     }
     
+    // Função auxiliar para converter uma expressão da LA para a sintaxe da linguagem C
+    // Apenas os operadores precisam ser modificados
     public String parseExpressao(LAParser.ExpressaoContext ctx){
         String ret = parseTermo_logico(ctx.t1);
         for(LAParser.Termo_logicoContext termo : ctx.t2){
@@ -73,6 +85,7 @@ public class LAVisitorGerador{
         return ret.replaceAll("=", "==").replaceAll("<>", "!=").replaceAll(">==", ">=").replaceAll("<==", "<=");
     }
     
+    // Função auxiliar para a parseExpressao
     public String parseTermo_logico(LAParser.Termo_logicoContext ctx){
         String ret = parseFator_logico(ctx.f1);
         for(LAParser.Fator_logicoContext fl : ctx.f2){
@@ -82,6 +95,7 @@ public class LAVisitorGerador{
         return ret;
     }
     
+    // Função auxiliar para a parseTermo_logico
     public String parseFator_logico(LAParser.Fator_logicoContext ctx){
         if(ctx.nao != null){
             return "!" + ctx.parcela_logica().getText();
@@ -91,6 +105,8 @@ public class LAVisitorGerador{
         }
     }
     
+    // Função inicial que começa a percorrer a árvore a partir da raiz
+    // O código C gerado vai sendo enviado para a classe Saida pelo seu método estático println
     public void visitPrograma(LAParser.ProgramaContext ctx){
         pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));
         Saida.println("#include <stdio.h>");
@@ -120,7 +136,7 @@ public class LAVisitorGerador{
     
     public void visitDecl_local(LAParser.Decl_localContext ctx){
         if(ctx.variavel() != null){
-            // variavel normal
+            // Variável simples
             if(ctx.variavel().tipo().getText().indexOf("registro") == -1){
                 boolean ponteiro = ctx.variavel().tipo().getText().charAt(0) == '^';
                 String tipo = ctx.variavel().tipo().getText();
@@ -150,7 +166,7 @@ public class LAVisitorGerador{
                     }
                 }
             }
-            // registro
+            // Registro
             else{
                 Saida.println("struct {");
                 ArrayList<Pair<String, String>> varList = new ArrayList<Pair<String, String>>();
@@ -390,6 +406,8 @@ public class LAVisitorGerador{
     
     public void visitCmdCaso (LAParser.CmdCasoContext ctx){
         Saida.println("switch(" + ctx.exp_aritmetica().getText() + "){");
+        // Na Linguagem LA o comando 'caso' pode ter seletores em forma de intervalo
+        // Como C não possui essa propriedade, então são gerados vários cases, um para cada valor do intervalo
         for(LAParser.Item_selecaoContext item : ctx.selecao().item_selecao()){
             int a = Integer.parseInt(item.constantes().ni1.ni1.getText());
             int b = a;
@@ -437,7 +455,8 @@ public class LAVisitorGerador{
     
     public void visitCmdAtribuicao(LAParser.CmdAtribuicaoContext ctx){
         String tipo = visitExpressao(ctx.expressao());
-        if(tipo.equals("literal")){
+        // A atribuição de strings em C é feita pela função strcpy, da biblioteca string.h
+        if(tipo.equals("literal")){ 
             Saida.println("strcpy(" + ctx.identificador().getText() + ", " + ctx.expressao().getText() + ");");
         }
         else{

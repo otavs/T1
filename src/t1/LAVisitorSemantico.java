@@ -6,11 +6,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import org.antlr.v4.runtime.Token;
 
+// Visitor utilizado para a análise semântica
+// Ele recebe a árvore sintática produzida pelo parser e percorre os seus nós verificando os erros semânticos
 public class LAVisitorSemantico extends LABaseVisitor<String> {
     PilhaDeTabelas pilhaDeTabelas;
-    HashMap<String, LinkedList<EntradaTabelaDeSimbolos>> mapRegistros;
-    HashMap<String, LinkedList<String>> mapParametros;
+    HashMap<String, LinkedList<EntradaTabelaDeSimbolos>> mapRegistros; // mapeia o nome de cada registro com uma lista que armazena todos os seus respectivos campos
+    HashMap<String, LinkedList<String>> mapParametros; // mapeia o nome de cada função e procedimento com uma lista que armazena todos os seus respectivos parâmetros
     
+    // Função auxiliar para verificar se um tipo é numérico
     public boolean isNumerico(String tipo){
         if(tipo.equals("inteiro") || tipo.equals("real")){
             return true;
@@ -18,6 +21,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         return false;
     }
     
+    // Função auxiliar para verificar o tipo de retorno de uma operação binária
     public String tipoRetorno(String operacao, String op1, String op2){
         if(operacao.equals("aritmetica")){
             if(isNumerico(op1) && isNumerico(op2)){
@@ -50,6 +54,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         return "";
     }
     
+    // Função inicial, recebe a raiz da árvore sintática, inicializa as estruturas de dados e começa a percorrer a árvore
     @Override
     public String visitPrograma(LAParser.ProgramaContext ctx){
         pilhaDeTabelas = new PilhaDeTabelas();
@@ -151,7 +156,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
                 mapRegistros.get(idRegistro).add(new EntradaTabelaDeSimbolos(id.getText(), "variavel", tipo_txt));
             }
         }
-        // variaveis normais
+        // variaveis simples
         else{
             visitIdentificador(ctx.id);
             String id_txt = ctx.id.getText();
@@ -233,6 +238,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
             nome += "." + id.getText();
         }
         visitDimensao(ctx.dimensao());
+        // retorna o tipo desse identificador
         return pilhaDeTabelas.tipoDeDadoDoSimbolo(nome);
     }
     
@@ -392,6 +398,7 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         }
         return "";
     }
+    
     @Override
     public String visitCmdLeia(LAParser.CmdLeiaContext ctx){
         String id_txt = ctx.id1.getText();
@@ -679,6 +686,8 @@ public class LAVisitorSemantico extends LABaseVisitor<String> {
         return tipo;
     }
 
+    // O visitor de uma expressão retorna uma string com o tipo de dado dessa expressão
+    // Esse tipo é definido pelo retorno dos visitors de cada termo da expressão
     @Override
     public String visitExpressao(LAParser.ExpressaoContext ctx){
         String tipo = visitTermo_logico(ctx.t1);

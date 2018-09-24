@@ -1,5 +1,6 @@
 package t1;
 
+// Classe utilizada para armazenar as entradas de tabelas de símbolos com suas respectivas informações
 public class EntradaTabelaDeSimbolos {
     private String nome, tipo, tipoDeDado;
     

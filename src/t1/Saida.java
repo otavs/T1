@@ -1,5 +1,6 @@
 package t1;
 
+// Classe para armazenar a saída do compilador
 public class Saida {
     private static String texto = "";
     

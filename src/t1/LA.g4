@@ -5,6 +5,7 @@ grammar LA;
 }
 
 // GRAMÁTICA LINGUAGEM LA
+// A gramática foi digitada conforme a especificação, sendo traduzida para a sintaxe do ANTLR
 
 programa : declaracoes 'algoritmo' corpo 'fim_algoritmo' ;
 
@@ -126,8 +127,11 @@ NUM_INT : DIGITO+;
 
 NUM_REAL : DIGITO+ '.' DIGITO+;
 
+// Comentarios e espacos em branco são ignorados
+
 COMENTARIO : '{' ~('}')* '}' -> skip;
 
 ESPACOS_EM_BRANCO : (' ' | '\t' | '\r' | '\n') -> skip;
 
+// Regra especial para detectar erros léxicos no parser, onde é mais fácil obter informações sobre a parte da entrada que causou o erro
 CARACTERE_ERRADO : . ;
